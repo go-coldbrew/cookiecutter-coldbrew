@@ -1,0 +1,16 @@
+{
+    "source_path": "github.com/ankurs",
+    "app_name": "ExampleProject",
+    "grpc_package": "github.com.ankurs",
+    "service_name": "ExampleProject",
+    "project_short_description": "A Golang project.",
+    "docker_image": "alpine:latest",
+    "docker_build_image": "golang",
+    "docker_build_image_version": ["1.15", "1.16"],
+    "_copy_without_render": [
+        "third_party/*js",
+        "third_party/*js.map",
+        "third_party/*css.map",
+        "third_party/*css"
+    ]
+}

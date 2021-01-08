@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package {{cookiecutter.grpc_package}};
+
+option go_package = "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto;{{cookiecutter.app_name|lower|replace('.', '_')}}";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+// These annotations are used when generating the OpenAPI file.
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    version: "1.0";
+  };
+  external_docs: {
+    url: "https://{{cookiecutter.source_path}}/{{cookiecutter.app_name}}";
+    description: "{{cookiecutter.app_name}} repository";
+  }
+  schemes: HTTP;
+  schemes: HTTPS;
+};
+
+message EchoRequest{
+  string msg = 1;
+}
+message EchoResponse{
+  string msg = 1;
+}
+
+service {{cookiecutter.service_name}} {
+  rpc Echo(EchoRequest) returns (EchoResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/example/echo"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Echo endpoint"
+      description: "Provides an echo reply endpoint."
+      tags: "echo"
+    };
+  }
+}
