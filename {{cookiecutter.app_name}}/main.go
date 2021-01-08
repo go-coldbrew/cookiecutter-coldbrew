@@ -8,11 +8,11 @@ import (
 	"net/http"
 
 	"github.com/ankurs/ExampleProject/config"
-	"github.com/ankurs/ExampleProject/log"
 	exampleproject "github.com/ankurs/ExampleProject/proto"
 	"github.com/ankurs/ExampleProject/service"
 	"github.com/ankurs/ExampleProject/version"
 	"github.com/go-coldbrew/core"
+	"github.com/go-coldbrew/log"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
@@ -63,5 +63,5 @@ func main() {
 
 	cb.SetService(&svc{})
 
-	log.Error(cb.Run())
+	log.Error(context.Background(), cb.Run())
 }
