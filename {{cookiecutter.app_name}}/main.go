@@ -7,17 +7,17 @@ import (
 	"mime"
 	"net/http"
 
-	"github.com/ankurs/ExampleProject/config"
-	exampleproject "github.com/ankurs/ExampleProject/proto"
-	"github.com/ankurs/ExampleProject/service"
-	"github.com/ankurs/ExampleProject/version"
+	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
+	{{cookiecutter.app_name|lower}} "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
+	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service"
+	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 	"github.com/go-coldbrew/core"
 	"github.com/go-coldbrew/log"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
 
-	_ "github.com/ankurs/ExampleProject/statik"
+	_ "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/statik"
 )
 
 type svc struct {

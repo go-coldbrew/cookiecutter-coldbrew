@@ -1,8 +1,8 @@
 {
     "source_path": "github.com/ankurs",
-    "app_name": "ExampleProject",
+    "app_name": "MyApp",
     "grpc_package": "github.com.ankurs",
-    "service_name": "ExampleProject",
+    "service_name": "MySvc",
     "project_short_description": "A Golang project.",
     "docker_image": "alpine:latest",
     "docker_build_image": "golang",

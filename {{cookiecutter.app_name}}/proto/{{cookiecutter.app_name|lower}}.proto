@@ -39,4 +39,16 @@ service {{cookiecutter.service_name}} {
       tags: "echo"
     };
   }
+
+  rpc Error(EchoRequest) returns (EchoResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/example/error"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Error endpoint"
+      description: "Request made to this endpoint result in errors."
+      tags: "error"
+    };
+  }
 }
