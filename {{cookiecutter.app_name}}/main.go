@@ -32,7 +32,7 @@ func (s *svc) InitGRPC(ctx context.Context, server *grpc.Server) error {
 	return nil
 }
 
-func (s *svc) GetOpenAPIHandler(ctx context.Context) http.Handler {
+func getOpenAPIHandler() http.Handler {
 	// getOpenAPIHandler serves an OpenAPI UI.
 	// Adapted from https://github.com/philips/grpc-gateway-example/blob/a269bcb5931ca92be0ceae6130ac27ae89582ecc/cmd/serve.go#L63
 	mime.AddExtensionType(".svg", "image/svg+xml")
@@ -41,7 +41,6 @@ func (s *svc) GetOpenAPIHandler(ctx context.Context) http.Handler {
 	if err != nil {
 		panic("creating OpenAPI filesystem: " + err.Error())
 	}
-
 	return http.FileServer(statikFS)
 }
 
@@ -60,6 +59,8 @@ func main() {
 	}
 
 	cb := core.New(config.GetColdBrewConfig())
+
+	cb.SetOpenAPIHandler(getOpenAPIHandler())
 
 	cb.SetService(&svc{})
 
