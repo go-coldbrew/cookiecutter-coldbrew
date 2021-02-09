@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
-	"fmt"
 	"mime"
 	"net/http"
 
@@ -45,23 +43,14 @@ func getOpenAPIHandler() http.Handler {
 }
 
 func main() {
-
-	versionFlag := flag.Bool("version", false, "Version")
-	flag.Parse()
-
-	if *versionFlag {
-		fmt.Println("Build Date:", version.BuildDate)
-		fmt.Println("Git Commit:", version.GitCommit)
-		fmt.Println("Version:", version.Version)
-		fmt.Println("Go Version:", version.GoVersion)
-		fmt.Println("OS / Arch:", version.OsArch)
-		return
+	cfg := config.GetColdBrewConfig()
+	if cfg.AppName == "" {
+		cfg.AppName = "{{cookiecutter.app_name}}"
 	}
+	cfg.ReleaseName = version.GitCommit
 
-	cb := core.New(config.GetColdBrewConfig())
-
+	cb := core.New(cfg)
 	cb.SetOpenAPIHandler(getOpenAPIHandler())
-
 	cb.SetService(&svc{})
 
 	log.Error(context.Background(), cb.Run())

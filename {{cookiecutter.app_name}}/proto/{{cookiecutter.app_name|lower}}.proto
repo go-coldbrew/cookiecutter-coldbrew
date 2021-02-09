@@ -6,6 +6,8 @@ option go_package = "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/prot
 
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/api/httpbody.proto";
+import "google/protobuf/empty.proto";
 
 // These annotations are used when generating the OpenAPI file.
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
@@ -28,6 +30,12 @@ message EchoResponse{
 }
 
 service {{cookiecutter.service_name}} {
+  rpc HealthCheck(google.protobuf.Empty) returns (google.api.HttpBody) {
+      option (google.api.http) = {
+          get: "/healthcheck"
+      };
+  }
+
   rpc Echo(EchoRequest) returns (EchoResponse) {
     option (google.api.http) = {
       post: "/api/v1/example/echo"

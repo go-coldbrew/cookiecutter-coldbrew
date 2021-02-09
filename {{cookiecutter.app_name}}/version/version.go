@@ -19,3 +19,21 @@ var GoVersion = runtime.Version()
 
 // OsArch returns the os and arch used to build the binary
 var OsArch = fmt.Sprintf("%s %s", runtime.GOOS, runtime.GOARCH)
+
+type V struct {
+	GitCommit string `json:"git_commit"`
+	Version   string `json:"version"`
+	BuildDate string `json:"build_date"`
+	GoVersion string `json:"go_version"`
+	OSArch    string `json:"os_arch"`
+}
+
+func Get() V {
+	return V{
+		GitCommit: GitCommit,
+		Version:   Version,
+		BuildDate: BuildDate,
+		GoVersion: GoVersion,
+		OSArch:    OsArch,
+	}
+}
