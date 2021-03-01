@@ -12,6 +12,7 @@ Powered by [Cookiecutter](https://github.com/audreyr/cookiecutter), Cookiecutter
 - Uses `dep` or `mod` for dependency management
 - Only maintained 3rd party libraries are used.
 - Use multistage docker builds for super small docker images
+- Make sure '$GOBIN' is set in PATH
 
 ## Docker
 
