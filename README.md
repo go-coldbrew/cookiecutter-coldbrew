@@ -1,4 +1,4 @@
-# cookiecutter-golang
+# cookiecutter-coldbrew
 
 Powered by [Cookiecutter](https://github.com/audreyr/cookiecutter), Cookiecutter Coldbrew is a framework for jumpstarting production-ready go projects quickly.
 
@@ -12,6 +12,7 @@ Powered by [Cookiecutter](https://github.com/audreyr/cookiecutter), Cookiecutter
 - Uses `dep` or `mod` for dependency management
 - Only maintained 3rd party libraries are used.
 - Use multistage docker builds for super small docker images
+- Make sure '$GOBIN' is set in PATH
 
 ## Docker
 
@@ -42,7 +43,7 @@ $ cookiecutter gh:go-coldbrew/cookiecutter-coldbrew
 
 You will be asked about your basic info (name, project name, app name, etc.). This info will be used to customize your new project.
 
-Warning: After this point, change 'Luis Morales', 'lacion', etc to your own information.
+Warning: After this point, change 'github.com/ankurs', 'MyApp', etc to your own information.
 
 Answer the prompts with your own desired [options](). For example:
 ```console
