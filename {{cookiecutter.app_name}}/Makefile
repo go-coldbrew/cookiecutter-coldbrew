@@ -48,7 +48,7 @@ install:
 		github.com/bufbuild/buf/cmd/buf
 
 generate:
-	buf generate --file ./proto/{{cookiecutter.app_name}}.proto
+	buf generate --path proto/*.proto
 	# Generate static assets for OpenAPI UI
 	statik -m -f -src third_party/OpenAPI/
 
