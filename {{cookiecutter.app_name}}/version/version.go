@@ -20,12 +20,15 @@ var GoVersion = runtime.Version()
 // OsArch returns the os and arch used to build the binary
 var OsArch = fmt.Sprintf("%s %s", runtime.GOOS, runtime.GOARCH)
 
+var AppName = "{{cookiecutter.app_name}}"
+
 type V struct {
 	GitCommit string `json:"git_commit"`
 	Version   string `json:"version"`
 	BuildDate string `json:"build_date"`
 	GoVersion string `json:"go_version"`
 	OSArch    string `json:"os_arch"`
+	AppName   string `json:"app"`
 }
 
 func Get() V {
@@ -35,5 +38,6 @@ func Get() V {
 		BuildDate: BuildDate,
 		GoVersion: GoVersion,
 		OSArch:    OsArch,
+		AppName:   AppName,
 	}
 }
