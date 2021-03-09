@@ -45,7 +45,7 @@ func getOpenAPIHandler() http.Handler {
 func main() {
 	cfg := config.GetColdBrewConfig()
 	if cfg.AppName == "" {
-		cfg.AppName = "{{cookiecutter.app_name}}"
+		cfg.AppName = version.AppName
 	}
 	cfg.ReleaseName = version.GitCommit
 
