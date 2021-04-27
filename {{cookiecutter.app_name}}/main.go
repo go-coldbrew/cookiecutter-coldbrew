@@ -26,7 +26,11 @@ func (s *svc) InitHTTP(ctx context.Context, mux *runtime.ServeMux, endpoint stri
 }
 
 func (s *svc) InitGRPC(ctx context.Context, server *grpc.Server) error {
-	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, service.New(config.Get()))
+	impl, err := service.New(config.Get())
+	if err != nil {
+		return err
+	}
+	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, impl)
 	return nil
 }
 

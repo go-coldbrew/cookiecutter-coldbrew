@@ -33,8 +33,8 @@ func (s *svc) Error(ctx context.Context, req *{{cookiecutter.app_name|lower}}.Ec
 }
 
 // Creates a new Service
-func New(cfg config.Config) {{cookiecutter.app_name|lower}}.{{cookiecutter.service_name}}Server {
+func New(cfg config.Config) ({{cookiecutter.app_name|lower}}.{{cookiecutter.service_name}}Server, error) {
 	return &svc{
 		prefix: cfg.Prefix,
-	}
+	}, nil
 }

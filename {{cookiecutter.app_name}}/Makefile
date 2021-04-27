@@ -1,6 +1,5 @@
 .PHONY: build build-alpine clean test default install generate run run-docker
 
-
 BIN_NAME={{cookiecutter.app_name}}
 
 VERSION := $(shell grep "const Version " version/version.go | sed -E 's/.*"(.+)"$$/\1/')
@@ -60,7 +59,7 @@ test:
 	go test ./...
 
 run: build
-	./bin/${BIN_NAME}
+	set -a; source local.env; ./bin/${BIN_NAME}
 
 run-docker: build-docker
-	docker run -p 9091:9091 -p 9090:9090 ${IMAGE_NAME}:local
+	docker run -p 9091:9091 -p 9090:9090 --env-file local.env ${IMAGE_NAME}:local
