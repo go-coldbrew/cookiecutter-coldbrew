@@ -4,8 +4,8 @@ go 1.15
 
 require (
 	github.com/bufbuild/buf v0.41.0
-	github.com/go-coldbrew/core v0.1.0
-	github.com/go-coldbrew/errors v0.1.0
+	github.com/go-coldbrew/core v0.1.6
+	github.com/go-coldbrew/errors v0.1.1
 	github.com/go-coldbrew/log v0.1.0
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.3.0
