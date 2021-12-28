@@ -30,11 +30,20 @@ message EchoResponse{
 }
 
 service {{cookiecutter.service_name}} {
+  //LivenessProbe for the service
   rpc HealthCheck(google.protobuf.Empty) returns (google.api.HttpBody) {
       option (google.api.http) = {
           get: "/healthcheck"
       };
   }
+
+  //ReadinessProbe for the service
+  rpc ReadyCheck(google.protobuf.Empty) returns (google.api.HttpBody) {
+      option (google.api.http) = {
+          get: "/readycheck"
+      };
+  }
+
 
   rpc Echo(EchoRequest) returns (EchoResponse) {
     option (google.api.http) = {

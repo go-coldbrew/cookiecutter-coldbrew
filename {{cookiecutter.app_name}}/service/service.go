@@ -7,6 +7,7 @@ import (
 	{{cookiecutter.app_name|lower}} "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	"github.com/go-coldbrew/errors"
 	"github.com/go-coldbrew/log"
@@ -16,8 +17,14 @@ type svc struct {
 	prefix string
 }
 
+//ReadinessProbe for the service
+func (s *svc) ReadyCheck(ctx context.Context, _ *emptypb.Empty) (*httpbody.HttpBody, error) {
+	return GetReadyState(ctx)
+}
+
+//LivenessProbe for the service
 func (s *svc) HealthCheck(ctx context.Context, _ *empty.Empty) (*httpbody.HttpBody, error) {
-	return getHealthCheck(ctx), nil
+	return GetHealthCheck(ctx), nil
 }
 
 func (s *svc) Echo(_ context.Context, req *{{cookiecutter.app_name|lower}}.EchoRequest) (*{{cookiecutter.app_name|lower}}.EchoResponse, error) {
@@ -34,7 +41,10 @@ func (s *svc) Error(ctx context.Context, req *{{cookiecutter.app_name|lower}}.Ec
 
 // Creates a new Service
 func New(cfg config.Config) ({{cookiecutter.app_name|lower}}.{{cookiecutter.service_name}}Server, error) {
-	return &svc{
+	s := &svc{
 		prefix: cfg.Prefix,
-	}, nil
+	}
+	SetReady() // service initialized we can now serve traffic
+	return s, nil
+
 }

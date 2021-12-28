@@ -56,7 +56,11 @@ clean:
 	go clean ./...
 
 test:
-	go test ./...
+	go test -race -coverpkg=.,./config/...,./service/... -coverprofile cover.out ./...
+	go tool cover -func=cover.out
+
+coverage-html:
+	go tool cover -html=cover.out -o=cover.html
 
 run: build
 	set -a; source local.env; ./bin/${BIN_NAME}

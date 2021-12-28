@@ -21,6 +21,19 @@ import (
 type svc struct {
 }
 
+//FailCheck allows graceful termination of the service
+func (s *svc) FailCheck(fail bool) {
+	if fail {
+		service.SetNotReady()
+	}
+	service.SetReady()
+}
+
+func (s *svc) Stop() {
+	//stops the service
+	// use this to destroy your service
+}
+
 func (s *svc) InitHTTP(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) error {
 	return {{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}HandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
