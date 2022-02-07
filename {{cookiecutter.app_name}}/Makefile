@@ -46,7 +46,7 @@ install:
 		github.com/rakyll/statik \
 		github.com/bufbuild/buf/cmd/buf
 
-generate:
+generate: install
 	buf generate --path proto/*.proto
 	# Generate static assets for OpenAPI UI
 	statik -m -f -src third_party/OpenAPI/

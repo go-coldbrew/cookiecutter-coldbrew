@@ -39,7 +39,7 @@
     window.onload = function() {
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
-              url: "./{{cookiecutter.app_name}}.swagger.json",
+              url: "./{{cookiecutter.app_name | lower}}.swagger.json",
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [
