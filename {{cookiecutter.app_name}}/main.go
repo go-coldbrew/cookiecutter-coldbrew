@@ -25,6 +25,7 @@ type svc struct {
 func (s *svc) FailCheck(fail bool) {
 	if fail {
 		service.SetNotReady()
+		return
 	}
 	service.SetReady()
 }
