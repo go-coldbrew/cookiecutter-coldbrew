@@ -23,6 +23,9 @@ LABEL REPO="https://{{cookiecutter.source_path}}/{{cookiecutter.app_name}}"
 LABEL GIT_COMMIT=$GIT_COMMIT
 LABEL VERSION=$VERSION
 
+# add tz data
+RUN apk add --no-cache tzdata
+
 # Because of https://github.com/docker/docker/issues/14914
 ENV PATH=$PATH:/opt/{{cookiecutter.app_name}}/bin
 
