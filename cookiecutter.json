@@ -6,7 +6,7 @@
     "project_short_description": "A Golang project.",
     "docker_image": "alpine:latest",
     "docker_build_image": "golang",
-    "docker_build_image_version": ["1.17", "1.18"],
+    "docker_build_image_version": ["1.18", "1.19"],
     "_copy_without_render": [
         "third_party/*js",
         "third_party/*js.map",
