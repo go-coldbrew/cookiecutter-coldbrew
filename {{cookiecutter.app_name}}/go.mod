@@ -6,19 +6,17 @@ require (
 	github.com/bufbuild/buf v1.8.0
 	github.com/go-coldbrew/core v0.1.16
 	github.com/go-coldbrew/errors v0.2.0
-	github.com/go-coldbrew/log v0.2.0
-	github.com/golang/protobuf v1.5.2
+	github.com/go-coldbrew/log v0.2.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rakyll/statik v0.1.7
-	google.golang.org/genproto v0.0.0-20220921223823-23cae91e6737
+	google.golang.org/genproto v0.0.0-20220923205249-dd2d53f1fffc
 	google.golang.org/grpc v1.49.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.28.1
 )
 
 require (
-
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
@@ -42,7 +40,7 @@ require (
 	github.com/go-coldbrew/feature-flags v0.1.3 // indirect
 	github.com/go-coldbrew/hystrixprometheus v0.1.0 // indirect
 	github.com/go-coldbrew/interceptors v0.1.4 // indirect
-	github.com/go-coldbrew/options v0.2.1 // indirect
+	github.com/go-coldbrew/options v0.2.2 // indirect
 	github.com/go-coldbrew/tracing v0.0.1 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -54,6 +52,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
@@ -103,7 +102,7 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.22.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20220921203646-d300de134e69 // indirect
+	golang.org/x/net v0.0.0-20220923203811-8be639271d50 // indirect
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
 	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
