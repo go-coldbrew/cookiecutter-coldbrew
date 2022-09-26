@@ -6,7 +6,6 @@ import (
 
 	{{cookiecutter.app_name|lower}} "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	"github.com/go-coldbrew/errors"
@@ -23,7 +22,7 @@ func (s *svc) ReadyCheck(ctx context.Context, _ *emptypb.Empty) (*httpbody.HttpB
 }
 
 //LivenessProbe for the service
-func (s *svc) HealthCheck(ctx context.Context, _ *empty.Empty) (*httpbody.HttpBody, error) {
+func (s *svc) HealthCheck(ctx context.Context, _ *emptypb.Empty) (*httpbody.HttpBody, error) {
 	return GetHealthCheck(ctx), nil
 }
 
