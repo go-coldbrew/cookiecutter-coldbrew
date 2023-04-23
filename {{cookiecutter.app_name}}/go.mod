@@ -17,6 +17,7 @@ require (
 	google.golang.org/grpc v1.54.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.30.0
+	github.com/boumenot/gocover-cobertura v1.2.0
 )
 
 require (
