@@ -20,8 +20,13 @@ var GoVersion = runtime.Version()
 // OsArch returns the os and arch used to build the binary
 var OsArch = fmt.Sprintf("%s %s", runtime.GOOS, runtime.GOARCH)
 
-var AppName = "{{cookiecutter.app_name}}"
+// AppName returns the name of the app
+var AppName = "MyApp"
 
+// Branch returns the branch name
+var Branch = ""
+
+// V is a struct that contains all the version information
 type V struct {
 	GitCommit string `json:"git_commit"`
 	Version   string `json:"version"`
@@ -29,8 +34,11 @@ type V struct {
 	GoVersion string `json:"go_version"`
 	OSArch    string `json:"os_arch"`
 	AppName   string `json:"app"`
+	Branch    string `json:"branch"`
 }
 
+// Get returns a V struct with all the version information
+// This is used to populate the version endpoint of the API
 func Get() V {
 	return V{
 		GitCommit: GitCommit,
@@ -39,5 +47,6 @@ func Get() V {
 		GoVersion: GoVersion,
 		OSArch:    OsArch,
 		AppName:   AppName,
+		Branch:    Branch,
 	}
 }

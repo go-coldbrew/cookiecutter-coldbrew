@@ -37,7 +37,7 @@ def init_git():
         git.wait()
 
 def init_proto():
-    print ("Fetching go moduled, might take a few minutes")
+    print ("Fetching go modules, might take a few minutes")
     code = Popen(["go","mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
     if code > 0:
         sys.exit(code)
