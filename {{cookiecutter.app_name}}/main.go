@@ -14,6 +14,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
+	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 
 	_ "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/statik"
 )
@@ -50,7 +51,6 @@ func (s *cbSvc) InitHTTP(ctx context.Context, mux *runtime.ServeMux, endpoint st
 // InitGRPC is called by the ColdBrew framework to initialize the gRPC server and register the gRPC handlers
 // This is a good place to register your gRPC handlers if you have any custom handlers that you want to register with the gRPC server
 // If you are using the grpc-gateway, you can use the RegisterMySvcHandlerFromEndpoint function to register the HTTP handlers
-// The endpoint is the address of the gRPC server
 func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
 	// Create the service implementation
 	impl, err := service.New(config.Get())
@@ -59,6 +59,9 @@ func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
 	}
 	// Register the service implementation with the gRPC server
 	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, impl)
+
+	// Register the health check service implementation with the gRPC server so that the gRPC health check endpoint is available
+	healthgrpc.RegisterHealthServer(server, impl)
 	return nil
 }
 
