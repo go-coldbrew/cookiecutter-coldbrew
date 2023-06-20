@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"sync/atomic"
 
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 )
@@ -14,19 +15,23 @@ import (
 var (
 	// hc is the health check response for the service in JSON format
 	hc []byte
-	// ready is the readiness state of the service
-	ready int32
+	// hcServer is the health check server for the service
+	hcServer *health.Server
 )
 
-// readiness states
 const (
-	statusReady    = 1
-	statusNotReady = 0
+	serviceName = "{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}"
 )
 
 func init() {
 	// initialize the health check response for the service
 	hc, _ = json.Marshal(version.Get())
+
+	// initialize the health check server for the service
+	hcServer = health.NewServer()
+
+	// register the health check server for the service
+	hcServer.SetServingStatus(serviceName, healthpb.HealthCheckResponse_NOT_SERVING)
 }
 
 // GetHealthCheck returns the health check response for the service
@@ -41,8 +46,13 @@ func GetHealthCheck(context.Context) *httpbody.HttpBody {
 // GetReadyState returns the readiness state of the service and an error if the service is not ready
 // This is used by the Kubernetes readiness probe to check the readiness of the service
 func GetReadyState(ctx context.Context) (*httpbody.HttpBody, error) {
-	st := atomic.LoadInt32(&ready)
-	if st == statusReady {
+	resp, err := hcServer.Check(context.Background(), &healthpb.HealthCheckRequest{
+		Service: serviceName,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if resp.Status == healthpb.HealthCheckResponse_SERVING {
 		return GetHealthCheck(ctx), nil
 	}
 	return nil, status.Error(codes.Internal, "Not Ready to server traffic")
@@ -50,10 +60,15 @@ func GetReadyState(ctx context.Context) (*httpbody.HttpBody, error) {
 
 // SetNotReady sets the readiness state of the service to not ready
 func SetNotReady() {
-	atomic.StoreInt32(&ready, statusNotReady)
+	hcServer.Shutdown()
 }
 
 // SetReady sets the readiness state of the service to ready
 func SetReady() {
-	atomic.StoreInt32(&ready, statusReady)
+	hcServer.Resume()
+}
+
+// GetHealthCheckServer returns the health check server for the service
+func GetHealthCheckServer() *health.Server {
+	return hcServer
 }
