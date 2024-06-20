@@ -31,7 +31,9 @@ unit-test:
   coverage: '/total:\s*\(statements\)\s*\d+.\d+%/'
   artifacts:
     reports:
-      cobertura: cover.xml
+      coverage_report:
+      coverage_format: cobertura
+      path: cover.xml
 
 lint:
   <<: *go_setup
