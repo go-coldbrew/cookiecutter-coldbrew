@@ -2,6 +2,7 @@
 
 BIN_NAME={{cookiecutter.app_name}}
 
+SHELL := $(shell which bash)
 VERSION := $(shell grep "const Version " version/version.go | sed -E 's/.*"(.+)"$$/\1/')
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+DIRTY" || true)
@@ -14,16 +15,20 @@ help:
 	@echo 'Management commands for {{cookiecutter.app_name}}:'
 	@echo
 	@echo 'Usage:'
-	@echo '    make build           Compile the project.'
-	@echo '    make test            Run tests on a compiled project.'
-	@echo '    make clean           Clean the directory tree.'
-	@echo '    make dep             Update dependencies.'
-	@echo '    make generate        Generate code.'
-	@echo '    make run             Run the project.'
-	@echo '    make run-docker      Run the project in a docker container.'
+	@echo '    make bench           Run benchmarks.'
+	@echo '    make build           Compile the project and generate a binary.'
 	@echo '    make build-docker    Build a docker image.'
-	@echo '    make lint            Run linters.'
-	@echo '    make mock            Generate mocks.'
+	@echo '    make clean           Clean the directory tree.'
+	@echo '    make coverage-html   Generate test coverage report.'
+	@echo '    make dep             Update dependencies.'
+	@echo '    make generate        Generate code from proto files.'
+	@echo '    make help            Show this message.'
+	@echo '    make lint            Run linters on the project.'
+	@echo '    make mock            Generate mocks for interfaces.'
+	@echo '    make run             Run the project locally.'
+	@echo '    make run-docker      Run the project in a docker container.'
+	@echo '    make runj            Run the project locally with jq log parsing.'
+	@echo '    make test            Run tests.'
 	@echo
 
 build:
@@ -40,7 +45,7 @@ build-docker:
 	@echo "building image ${BIN_NAME} ${VERSION} $(GIT_COMMIT)"
 	docker build --build-arg VERSION=${VERSION} --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) -t $(IMAGE_NAME):local .
 
-deps:
+dep:
 	go mod tidy
 
 install:
@@ -52,7 +57,8 @@ install:
 		github.com/rakyll/statik \
 		github.com/vektra/mockery/v2 \
 		github.com/bufbuild/buf/cmd/buf \
-		github.com/golangci/golangci-lint/cmd/golangci-lint
+		github.com/golangci/golangci-lint/cmd/golangci-lint \
+		github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto
 
 generate: install
 	buf generate --path proto/*.proto
@@ -75,13 +81,22 @@ bench:
 	go test -bench=. -run=^B -benchtime 10s -benchmem ./...
 
 lint: install
-	golangci-lint run
+	golangci-lint run --timeout 5m
 
 mock: install
 	mockery --all --keeptree --dir ./service/ --output ./misc/mocks
 
 run: build
-	set -a; source local.env; ./bin/${BIN_NAME}
+	@echo
+	@echo "swagger ui available at http://localhost:9091/swagger/"
+	@echo
+	@set -a; source local.env; ./bin/${BIN_NAME}
+
+runj: build
+	@echo
+	@echo "swagger ui available at http://localhost:9091/swagger/"
+	@echo
+	@set -a; source local.env && ./bin/${BIN_NAME} 1> >(jq -R "fromjson? | ." -C)
 
 run-docker: build-docker
 	docker run -p 9091:9091 -p 9090:9090 --env-file local.env ${IMAGE_NAME}:local

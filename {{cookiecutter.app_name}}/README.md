@@ -21,17 +21,12 @@ $ make run
 The Makefile contains a number of useful commands to help you get started. Here are some of the most useful ones:
 - `make help` - Prints the help
 - `make test` - Runs the tests
-- `make test-coverage` - Runs the tests and generates a coverage report
-- `make test-coverage-html` - Runs the tests and generates a coverage report in HTML
 - `make bench` - Runs the benchmarks
 - `make lint` - Runs the linter
 - `make run` - Runs the application
+- `make runj` - Runs the application with json logs parsing with jq
 - `make build` - Builds the application
 - `make generate` - Generates the code
-- `make docker-build` - Builds the Docker image
-- `make docker-run` - Runs the Docker image
-- `make deps` - Installs the dependencies
-- `make clean` - Cleans up the project
 
 ## Docker
 
@@ -55,7 +50,7 @@ The file `serice/service.go` contains the implementation of the API and serves a
 
 ### HTTP to gRPC mapping
 
-We use [grpc-gateway] to automatically map HTTP requests to gRPC requests. You can find the mapping in the `proto/myapp.proto` file. This server is generated according to [custom options](https://cloud.google.com/service-infrastructure/docs/service-management/reference/rpc/google.api#http) in your gRPC definition.  You can find more information about the mapping [here](https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/)
+We use [grpc-gateway] to automatically map HTTP requests to gRPC requests. You can find the mapping in the `proto/{{cookiecutter.app_name|lower}}.proto` file. This server is generated according to [custom options](https://cloud.google.com/service-infrastructure/docs/service-management/reference/rpc/google.api#http) in your gRPC definition.  You can find more information about the mapping [here](https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/)
 
 ## Application configuration
 

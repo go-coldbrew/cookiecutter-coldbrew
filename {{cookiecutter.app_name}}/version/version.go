@@ -21,7 +21,7 @@ var GoVersion = runtime.Version()
 var OsArch = fmt.Sprintf("%s %s", runtime.GOOS, runtime.GOARCH)
 
 // AppName returns the name of the app
-var AppName = "MyApp"
+var AppName = "{{cookiecutter.app_name}}"
 
 // Branch returns the branch name
 var Branch = ""
