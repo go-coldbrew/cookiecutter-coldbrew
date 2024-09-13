@@ -1,0 +1,27 @@
+version: v2
+modules:
+  - path: proto
+    lint:
+      use:
+        - BASIC
+        - FILE_LOWER_SNAKE_CASE
+      except:
+        - ENUM_NO_ALLOW_ALIAS
+        - FIELD_NOT_REQUIRED
+        - IMPORT_NO_PUBLIC
+        - PACKAGE_DIRECTORY_MATCH
+        - PACKAGE_NO_IMPORT_CYCLE
+        - PACKAGE_SAME_DIRECTORY
+      disallow_comment_ignores: true
+    breaking:
+      use:
+        - WIRE_JSON
+      except:
+        - FIELD_SAME_DEFAULT
+  - path: third_party/grpc-gateway
+    lint:
+      disallow_comment_ignores: true
+deps:
+  - buf.build/envoyproxy/protoc-gen-validate
+  - buf.build/googleapis/googleapis
+  - buf.build/grpc/grpc
