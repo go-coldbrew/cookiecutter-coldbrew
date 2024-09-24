@@ -1,0 +1,10 @@
+with-expecter: true
+all: true
+dir: misc/mocks/{% raw %}{{ replaceAll .InterfaceDirRelative "service/" ""}}{% endraw %}
+outpkg: "mocks"
+filename: "{% raw %}{{.InterfaceName}}{% endraw %}.go"
+mockname: "{% raw %}{{.InterfaceName}}{% endraw %}"
+packages:
+  {{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service:
+    config:
+      recursive: true

@@ -2,7 +2,7 @@ image: "golang:{{cookiecutter.docker_build_image_version}}"
 
 .go_setup: &go_setup
   variables: &go_variables
-    GOPATH: $CI_PROJECT_DIR/.go
+    DUMMY: "add your variables here"
   cache:
     paths:
       - .go/pkg/mod/
@@ -31,7 +31,9 @@ unit-test:
   coverage: '/total:\s*\(statements\)\s*\d+.\d+%/'
   artifacts:
     reports:
-      cobertura: cover.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: cover.xml
 
 lint:
   <<: *go_setup

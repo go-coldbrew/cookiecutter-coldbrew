@@ -84,7 +84,7 @@ lint: install
 	golangci-lint run --timeout 5m
 
 mock: install
-	mockery --all --keeptree --dir ./service/ --output ./misc/mocks
+	mockery --config .mockery.yaml
 
 run: build
 	@echo

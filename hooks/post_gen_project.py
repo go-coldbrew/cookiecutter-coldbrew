@@ -50,6 +50,10 @@ def init_proto():
     code = Popen(["go","mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
     if code > 0:
         sys.exit(code)
+    code = Popen(["make","mock"], cwd=PROJECT_DIRECTORY).wait()
+    if code > 0:
+        sys.exit(code)
+
 
 def remove_docker_files():
     """
