@@ -1,17 +1,17 @@
 version: v2
 plugins:
-  - local: protoc-gen-go
+  - remote: buf.build/protocolbuffers/go:v1.36.5
     out: proto
     opt: paths=source_relative
-  - local: protoc-gen-go-grpc
+  - remote: buf.build/grpc/go:v1.5.1
     out: proto
     opt: paths=source_relative,require_unimplemented_servers=false
-  - local: protoc-gen-grpc-gateway
+  - remote: buf.build/grpc-ecosystem/gateway:v2.26.1
     out: proto
     opt: paths=source_relative
-  - local: protoc-gen-openapiv2
+  - remote: buf.build/grpc-ecosystem/openapiv2:v2.26.1
     out: third_party/OpenAPI
     opt: ""
-  - local: protoc-gen-go-vtproto
+  - remote: buf.build/community/planetscale-vtprotobuf:v0.6.0
     out: proto
-    opt: paths=source_relative,features=marshal+unmarshal+size+clone
+    opt: paths=source_relative,features=marshal+unmarshal+size+clone+pool+equal
