@@ -18,10 +18,12 @@ modules:
         - WIRE_JSON
       except:
         - FIELD_SAME_DEFAULT
-  - path: third_party/grpc-gateway
+  - path: third_party/
     lint:
       disallow_comment_ignores: true
 deps:
   - buf.build/envoyproxy/protoc-gen-validate
   - buf.build/googleapis/googleapis
   - buf.build/grpc/grpc
+  - buf.build/grpc-ecosystem/protoc-gen-swagger
+  - buf.build/grpc-ecosystem/grpc-gateway

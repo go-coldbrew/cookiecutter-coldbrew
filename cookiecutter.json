@@ -1,12 +1,13 @@
 {
     "source_path": "github.com/ankurs",
-    "app_name": "MyApp",
+    "name": "MyApp",
+    "app_name": "{{cookiecutter.name | replace(' ', '_') | lower}}",
     "grpc_package": "com.github.ankurs",
     "service_name": "MySvc",
-    "project_short_description": "A Golang project.",
+    "project_short_description": "{{cookiecutter.name}} is a Golang project.",
     "docker_image": "alpine:latest",
     "docker_build_image": "golang",
-    "docker_build_image_version": ["1.23", "1.22"],
+    "docker_build_image_version": ["1.24", "1.23"],
     "_copy_without_render": [
         "third_party/OpenAPI/swagger-ui*",
         "third_party/*js.map",
