@@ -53,6 +53,10 @@ func (s *svc) Error(ctx context.Context, req *proto.EchoRequest) (*proto.EchoRes
 	return nil, errors.Wrap(err, "endpoint error")
 }
 
+func (s*svc) Stop() {
+	//  TODO: Add your cleanup code here
+}
+
 // Creates a new Service instance and returns it
 func New(cfg config.Config) (*svc, error) {
 	// TODO: Application should validate the config here and return an error if it is invalid or missing
