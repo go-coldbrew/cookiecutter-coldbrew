@@ -21,6 +21,7 @@ import (
 
 // cbSvc is the service implementation of ColdBrew service
 type cbSvc struct {
+	stopper core.CBStopper
 }
 
 // FailCheck allows graceful termination of the service
@@ -36,7 +37,9 @@ func (s *cbSvc) FailCheck(fail bool) {
 // Stop is called when the service is being stopped by the ColdBrew framework
 // This is a good place to clean up resources and gracefully shutdown the service if needed before the process exits completely
 func (s *cbSvc) Stop() {
-	//  TODO: Add your cleanup code here
+	s.stopper.Stop()
+
+	// Add your additional cleanup code here if needed
 }
 
 // InitHTTP is called by the ColdBrew framework to initialize the HTTP server and register the HTTP handlers
@@ -62,6 +65,9 @@ func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
 
 	// Register the health check service implementation with the gRPC server so that the gRPC health check endpoint is available
 	healthgrpc.RegisterHealthServer(server, impl)
+
+	// register stopper
+	s.stopper = impl
 	return nil
 }
 
