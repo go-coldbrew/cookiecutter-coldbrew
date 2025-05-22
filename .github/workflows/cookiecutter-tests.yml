@@ -1,0 +1,43 @@
+name: Cookiecutter Tests
+
+on:
+  push:
+    branches: [ main, master ] # Adjust if your main branch has a different name
+  pull_request:
+    branches: [ main, master ] # Adjust accordingly
+
+jobs:
+  test_cookiecutter_rendering:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # Use a recent Python 3 version
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21' # Or a version compatible with the tools to be installed
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cookies
+
+      - name: Install Go tools required by hooks
+        run: |
+          # The post_gen_project.py hook runs 'make install' from the generated project.
+          # That Makefile installs buf, mockery, statik, and golangci-lint.
+          # These tools need to be available in the PATH when the hook script executes.
+          go install github.com/bufbuild/buf/cmd/buf@latest
+          go install github.com/vektra/mockery/v2@latest
+          go install github.com/rakyll/statik@latest
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Run Cookiecutter tests
+        run: pytest tests/test_cookiecutter_generation.py
