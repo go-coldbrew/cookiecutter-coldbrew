@@ -50,15 +50,12 @@ dep:
 
 install:
 	go install \
-		github.com/rakyll/statik \
 		github.com/vektra/mockery/v2 \
 		github.com/bufbuild/buf/cmd/buf \
 		github.com/golangci/golangci-lint/cmd/golangci-lint
 
 generate: install
 	buf generate --path proto/*.proto
-	# Generate static assets for OpenAPI UI
-	statik -m -f -src third_party/OpenAPI/
 
 clean:
 	@test ! -e bin/${BIN_NAME} || rm bin/${BIN_NAME}
