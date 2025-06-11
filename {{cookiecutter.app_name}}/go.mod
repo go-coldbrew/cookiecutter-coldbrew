@@ -12,7 +12,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
-	github.com/rakyll/statik v0.1.7
 	github.com/stretchr/testify v1.10.0
 	github.com/vektra/mockery/v2 v2.46.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250219182151-9fdb1cabc7b2

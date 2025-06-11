@@ -12,11 +12,10 @@ import (
 	"github.com/go-coldbrew/core"
 	"github.com/go-coldbrew/log"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 
-	_ "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/statik"
+	openapi "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/third_party/OpenAPI"
 )
 
 // cbSvc is the service implementation of ColdBrew service
@@ -80,11 +79,7 @@ func getOpenAPIHandler() http.Handler {
 		log.Error(context.Background(), "msg", "error adding mime type", "err", err)
 	}
 
-	statikFS, err := fs.New()
-	if err != nil {
-		panic("creating OpenAPI filesystem: " + err.Error())
-	}
-	return http.FileServer(statikFS)
+	return http.FileServer(http.FS(openapi.ContentFS))
 }
 
 // main is the entry point of the service
