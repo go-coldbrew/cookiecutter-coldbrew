@@ -1,17 +1,17 @@
 {
-    "source_path": "github.com/ankurs",
-    "name": "MyApp",
-    "app_name": "{{cookiecutter.name | replace(' ', '_') | lower}}",
-    "grpc_package": "com.github.ankurs",
-    "service_name": "MySvc",
-    "project_short_description": "{{cookiecutter.name}} is a Golang project.",
-    "docker_image": "alpine:latest",
-    "docker_build_image": "golang",
-    "docker_build_image_version": ["1.24", "1.23"],
-    "_copy_without_render": [
-        "third_party/OpenAPI/swagger-ui*",
-        "third_party/*js.map",
-        "third_party/*css.map",
-        "third_party/*css"
-    ]
+  "source_path": "github.com/ankurs",
+  "name": "MyApp",
+  "app_name": "{{cookiecutter.name | replace(' ', '_') | lower}}",
+  "grpc_package": "com.github.ankurs",
+  "service_name": "MySvc",
+  "project_short_description": "{{cookiecutter.name}} is a Golang project.",
+  "docker_image": "alpine:latest",
+  "docker_build_image": "golang",
+  "docker_build_image_version": ["1.25", "1.24"],
+  "_copy_without_render": [
+    "third_party/OpenAPI/swagger-ui*",
+    "third_party/*js.map",
+    "third_party/*css.map",
+    "third_party/*css"
+  ]
 }
