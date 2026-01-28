@@ -52,7 +52,7 @@ install:
 	go install \
 		github.com/vektra/mockery/v2 \
 		github.com/bufbuild/buf/cmd/buf \
-		github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+		github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
 generate: install
 	buf generate --path proto/*.proto

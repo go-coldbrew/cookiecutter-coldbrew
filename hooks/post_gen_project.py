@@ -37,22 +37,38 @@ def init_git():
         git.wait()
 
 def init_proto():
-    print ("Fetching go modules, might take a few minutes")
-    code = Popen(["go","mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
+    print("Starting proto initialization...")
+    print("Step 1/5: Fetching Go modules (this might take a few minutes)...")
+    code = Popen(["go", "mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
     if code > 0:
+        print("Error: Failed to fetch Go modules.")
         sys.exit(code)
-    code = Popen(["make","install"], cwd=PROJECT_DIRECTORY).wait()
+
+    print("Step 2/5: Running 'make install'...")
+    code = Popen(["make", "install"], cwd=PROJECT_DIRECTORY).wait()
     if code > 0:
+        print("Error: 'make install' failed.")
         sys.exit(code)
-    code = Popen(["make","generate"], cwd=PROJECT_DIRECTORY).wait()
+
+    print("Step 3/5: Running 'make generate'...")
+    code = Popen(["make", "generate"], cwd=PROJECT_DIRECTORY).wait()
     if code > 0:
+        print("Error: 'make generate' failed.")
         sys.exit(code)
-    code = Popen(["go","mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
+
+    print("Step 4/5: Tidying Go modules...")
+    code = Popen(["go", "mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
     if code > 0:
+        print("Error: 'go mod tidy' failed.")
         sys.exit(code)
-    code = Popen(["make","mock"], cwd=PROJECT_DIRECTORY).wait()
+
+    print("Step 5/5: Running 'make mock'...")
+    code = Popen(["make", "mock"], cwd=PROJECT_DIRECTORY).wait()
     if code > 0:
+        print("Error: 'make mock' failed.")
         sys.exit(code)
+
+    print("Proto initialization completed successfully.")
 
 
 def remove_docker_files():
