@@ -131,6 +131,7 @@ class TestGoFileContent:
         assert "github.com/bufbuild/buf/cmd/buf" in content
         assert "github.com/golangci/golangci-lint/v2/cmd/golangci-lint" in content
         assert "github.com/vektra/mockery/v2" in content
+        assert "golang.org/x/vuln/cmd/govulncheck" in content
 
     def test_go_mod_coldbrew_dependencies(self, bake_project):
         project = bake_project()
@@ -273,6 +274,7 @@ class TestMakefileContent:
         assert "go tool buf generate proto" in content
         assert "go tool golangci-lint run" in content
         assert "go tool mockery" in content
+        assert "go tool govulncheck" in content
 
     def test_bench_run_pattern(self, bake_project):
         project = bake_project()

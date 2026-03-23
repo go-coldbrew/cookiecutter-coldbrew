@@ -59,6 +59,8 @@ jobs:
       with:
         go-version: "{{cookiecutter.docker_build_image_version}}"
         cache: true
+    - name: Vulnerability Check
+      run: make vulncheck
     - name: Lint
       uses: golangci/golangci-lint-action@v9
       with:
