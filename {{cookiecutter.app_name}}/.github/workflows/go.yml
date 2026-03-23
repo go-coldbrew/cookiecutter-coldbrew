@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
       run: make build
 
   test:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
       run: make test
 
   benchmark:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -50,7 +50,7 @@ jobs:
       run: make bench
 
   lint:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

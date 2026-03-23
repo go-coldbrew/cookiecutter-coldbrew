@@ -66,6 +66,7 @@ class TestProjectStructure:
             "Dockerfile",
             "go.mod",
             "README.md",
+            "AGENTS.md",
             "CLAUDE.md",
             "local.env.example",
             ".dockerignore",
@@ -363,11 +364,20 @@ class TestConfigFiles:
         assert "root = true" in content
         assert "[*.go]" in content
 
-    def test_claude_md(self, bake_project):
+    def test_agents_md(self, bake_project):
         project = bake_project()
-        content = (project / "CLAUDE.md").read_text()
+        content = (project / "AGENTS.md").read_text()
         assert "make build" in content
         assert "make test" in content
+        assert "make lint" in content
+        assert "govulncheck" in content
+        assert "make generate" in content
+        assert "Never edit generated files" in content
+
+    def test_claude_md_imports_agents(self, bake_project):
+        project = bake_project()
+        content = (project / "CLAUDE.md").read_text()
+        assert "@AGENTS.md" in content
 
 
 # ---------------------------------------------------------------------------

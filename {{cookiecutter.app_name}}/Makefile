@@ -1,4 +1,4 @@
-.PHONY: build build-alpine clean test default install generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck
+.PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck
 
 BIN_NAME={{cookiecutter.app_name}}
 
@@ -22,6 +22,7 @@ help:
 	@echo '    make clean           Clean the directory tree.'
 	@echo '    make coverage-html   Generate test coverage report.'
 	@echo '    make dep             Update dependencies.'
+	@echo '    make deps            Download Go modules.'
 	@echo '    make fmt             Format Go source files.'
 	@echo '    make generate        Generate code from proto files.'
 	@echo '    make help            Show this message.'
@@ -51,10 +52,10 @@ build-docker:
 dep:
 	go mod tidy
 
-install:
+deps:
 	go mod download
 
-generate: install
+generate: deps
 	go tool buf generate proto
 
 clean:
@@ -71,13 +72,13 @@ coverage-html:
 bench:
 	go test -bench=. -run=^$$ -benchtime 10s -benchmem ./...
 
-lint: install vulncheck
+lint: deps vulncheck
 	go tool golangci-lint run --timeout 5m
 
-vulncheck: install
+vulncheck: deps
 	go tool govulncheck ./...
 
-mock: install
+mock: deps
 	go tool mockery --config .mockery.yaml
 
 fmt:
