@@ -1,0 +1,11 @@
+.git
+.github
+.gitlab-ci.yml
+bin
+vendor
+cover.out
+cover.html
+local.env
+local.env.example
+*.md
+misc

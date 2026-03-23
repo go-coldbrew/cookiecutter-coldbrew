@@ -2,6 +2,13 @@ module {{cookiecutter.source_path}}/{{cookiecutter.app_name}}
 
 go {{cookiecutter.docker_build_image_version}}
 
+tool (
+	github.com/boumenot/gocover-cobertura
+	github.com/bufbuild/buf/cmd/buf
+	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+	github.com/vektra/mockery/v2
+)
+
 require (
 	github.com/boumenot/gocover-cobertura v1.2.0
 	github.com/bufbuild/buf v1.42.0

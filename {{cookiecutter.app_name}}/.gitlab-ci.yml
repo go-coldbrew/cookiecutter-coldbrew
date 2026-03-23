@@ -2,13 +2,12 @@ image: "golang:{{cookiecutter.docker_build_image_version}}"
 
 .go_setup: &go_setup
   variables: &go_variables
-    DUMMY: "add your variables here"
+    GOFLAGS: "-mod=readonly"
   cache:
     paths:
       - .go/pkg/mod/
   before_script:
     - mkdir -p .go
-    - go mod tidy -v
 
 .only_production: &only_production
   refs:
@@ -23,11 +22,9 @@ unit-test:
   stage: test
   variables:
     <<: *go_variables
-    GOFLAGS: "-mod=readonly"
   script:
-    - go install github.com/boumenot/gocover-cobertura
     - make test
-    - gocover-cobertura < cover.out > cover.xml
+    - go tool gocover-cobertura < cover.out > cover.xml
   coverage: '/total:\s*\(statements\)\s*\d+.\d+%/'
   artifacts:
     reports:
@@ -40,7 +37,6 @@ lint:
   stage: test
   variables:
     <<: *go_variables
-    GOFLAGS: "-mod=readonly"
   script:
     - make lint
 
@@ -49,16 +45,5 @@ benchmark:
   stage: test
   variables:
     <<: *go_variables
-    GOFLAGS: "-mod=readonly"
   script:
     - make bench
-
-vet:
-  <<: *go_setup
-  stage: test
-  variables:
-    <<: *go_variables
-    GOFLAGS: "-mod=readonly"
-  script:
-    - go vet ./...
-  allow_failure: true
