@@ -23,7 +23,7 @@ jobs:
           go-version: "1.26"
           cache: false
       - name: Generate project
-        run: cookiecutter --no-input .
+        run: cookiecutter --no-input --verbose .
       - name: Build
         run: make build
         working-directory: myapp
