@@ -1,4 +1,4 @@
-.PHONY: build build-alpine clean test default install generate run run-docker fmt doc
+.PHONY: build build-alpine clean test default install generate run run-docker fmt doc help bench build-docker coverage-html dep lint mock runj
 
 BIN_NAME={{cookiecutter.app_name}}
 

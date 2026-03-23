@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-from pathlib import Path
 
 import pytest
 from binaryornot.check import is_binary
@@ -249,8 +248,12 @@ class TestDockerContent:
     def test_dockerignore_excludes_secrets(self, bake_project):
         project = bake_project()
         content = (project / ".dockerignore").read_text()
+        lines = {line.strip() for line in content.splitlines() if line.strip()}
         for entry in ["local.env", "vendor", ".github"]:
-            assert entry in content
+            assert entry in lines
+        # .git must NOT be excluded — needed for version metadata during docker build
+        assert ".git" not in lines
+        assert ".git/" not in lines
 
 
 # ---------------------------------------------------------------------------

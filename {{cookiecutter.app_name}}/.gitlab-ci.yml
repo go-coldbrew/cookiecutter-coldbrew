@@ -3,11 +3,12 @@ image: "golang:{{cookiecutter.docker_build_image_version}}"
 .go_setup: &go_setup
   variables: &go_variables
     GOFLAGS: "-mod=readonly"
+    GOMODCACHE: "$CI_PROJECT_DIR/.go/pkg/mod"
   cache:
     paths:
       - .go/pkg/mod/
   before_script:
-    - mkdir -p .go
+    - mkdir -p .go/pkg/mod
 
 .only_production: &only_production
   refs:
