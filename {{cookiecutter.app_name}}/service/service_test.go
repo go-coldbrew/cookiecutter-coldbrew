@@ -82,9 +82,11 @@ func BenchmarkEcho(b *testing.B) {
 		b.Fatal(err)
 	}
 
+	ctx := context.Background()
+	req := &proto.EchoRequest{Msg: msg}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		resp, err := s.Echo(context.Background(), &proto.EchoRequest{Msg: msg})
+		resp, err := s.Echo(ctx, req)
 		if err != nil {
 			b.Fatal(err)
 		}
