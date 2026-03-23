@@ -46,7 +46,7 @@ func GetHealthCheck(context.Context) *httpbody.HttpBody {
 // GetReadyState returns the readiness state of the service and an error if the service is not ready
 // This is used by the Kubernetes readiness probe to check the readiness of the service
 func GetReadyState(ctx context.Context) (*httpbody.HttpBody, error) {
-	resp, err := hcServer.Check(context.Background(), &healthpb.HealthCheckRequest{
+	resp, err := hcServer.Check(ctx, &healthpb.HealthCheckRequest{
 		Service: serviceName,
 	})
 	if err != nil {
@@ -55,7 +55,7 @@ func GetReadyState(ctx context.Context) (*httpbody.HttpBody, error) {
 	if resp.Status == healthpb.HealthCheckResponse_SERVING {
 		return GetHealthCheck(ctx), nil
 	}
-	return nil, status.Error(codes.Internal, "Not Ready to server traffic")
+	return nil, status.Error(codes.Internal, "Not Ready to serve traffic")
 }
 
 // SetNotReady sets the readiness state of the service to not ready

@@ -33,20 +33,20 @@ The Makefile contains a number of useful commands to help you get started. Here 
 This project also contains a Dockerfile to help you get started with Docker. To build the image, run:
 
 ```console
-$ make docker-build
+$ make build-docker
 ```
 
 To run the image, run:
 
 ```console
-$ make docker-run
+$ make run-docker
 ```
 
 ## Adding a new endpoint to the API
 
 Our service is grpc first. We use [grpc-gateway] to automatically map HTTP requests to gRPC requests. This means that you can add a new endpoint to the API by adding a new rpc to `service {{cookiecutter.service_name}}` in `proto/{{cookiecutter.app_name|lower}}.proto` file. Then, you can run `make generate` to generate grpc/http endpoints.
 
-The file `serice/service.go` contains the implementation of the API and serves as the emtrypoint for the app. You can add your business logic there or any other package.
+The file `service/service.go` contains the implementation of the API and serves as the entrypoint for the app. You can add your business logic there or any other package.
 
 ### HTTP to gRPC mapping
 
@@ -58,11 +58,11 @@ This project uses [envconfig] to manage configuration as environment variables. 
 
 ### Environment variables for local development
 
-You can find the environment variables for local development in the `local.env` file. This file is used when you run `make run` or `make docker-run`.
+You can find the environment variables for local development in the `local.env` file (copy from `local.env.example`). This file is used when you run `make run` or `make run-docker`.
 
 ### Coldbrew configuration options
 
-A Large number of configuration options are prowered by [Coldbrew] and used as environment variables. You can find the list of environment variables [here](https://pkg.go.dev/github.com/go-coldbrew/core/config#Config).
+A large number of configuration options are powered by [Coldbrew] and used as environment variables. You can find the list of environment variables [here](https://pkg.go.dev/github.com/go-coldbrew/core/config#Config).
 
 ## Logging
 

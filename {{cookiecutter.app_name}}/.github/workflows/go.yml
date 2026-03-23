@@ -11,50 +11,56 @@ on:
 
 jobs:
   build:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: "{{cookiecutter.docker_build_image_version}}"
+        cache: true
     - name: Build
       run: make build
 
   test:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: "{{cookiecutter.docker_build_image_version}}"
+        cache: true
     - name: Test
       run: make test
 
   benchmark:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: "{{cookiecutter.docker_build_image_version}}"
+        cache: true
     - name: Benchmark
       run: make bench
 
   lint:
-    concurrency: {% raw -%}ci-${{ github.ref }}{%- endraw %}
+    concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: "{{cookiecutter.docker_build_image_version}}"
+        cache: true
+    - name: Vulnerability Check
+      run: make vulncheck
     - name: Lint
       uses: golangci/golangci-lint-action@v9
       with:

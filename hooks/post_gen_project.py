@@ -37,31 +37,25 @@ def init_git():
 
 def init_proto():
     print("Starting proto initialization...")
-    print("Step 1/5: Fetching Go modules (this might take a few minutes)...")
+    print("Step 1/4: Fetching Go modules (this might take a few minutes)...")
     code = Popen(["go", "mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: Failed to fetch Go modules.")
         sys.exit(code)
 
-    print("Step 2/5: Running 'make install'...")
-    code = Popen(["make", "install"], cwd=PROJECT_DIRECTORY).wait()
-    if code != 0:
-        print("Error: 'make install' failed.")
-        sys.exit(code)
-
-    print("Step 3/5: Running 'make generate'...")
+    print("Step 2/4: Running 'make generate'...")
     code = Popen(["make", "generate"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'make generate' failed.")
         sys.exit(code)
 
-    print("Step 4/5: Tidying Go modules...")
+    print("Step 3/4: Tidying Go modules...")
     code = Popen(["go", "mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'go mod tidy' failed.")
         sys.exit(code)
 
-    print("Step 5/5: Running 'make mock'...")
+    print("Step 4/4: Running 'make mock'...")
     code = Popen(["make", "mock"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'make mock' failed.")
@@ -79,5 +73,16 @@ def remove_docker_files():
             PROJECT_DIRECTORY, filename
         ))
 
+def setup_local_env():
+    """
+    Copies local.env.example to local.env for local development
+    """
+    import shutil
+    example = os.path.join(PROJECT_DIRECTORY, "local.env.example")
+    local = os.path.join(PROJECT_DIRECTORY, "local.env")
+    if os.path.exists(example) and not os.path.exists(local):
+        shutil.copy2(example, local)
+
 init_proto()
+setup_local_env()
 init_git()

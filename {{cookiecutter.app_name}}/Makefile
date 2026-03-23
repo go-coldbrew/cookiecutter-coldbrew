@@ -1,4 +1,4 @@
-.PHONY: build build-alpine clean test default install generate run run-docker
+.PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck
 
 BIN_NAME={{cookiecutter.app_name}}
 
@@ -6,6 +6,7 @@ SHELL := $(shell which bash)
 VERSION := $(shell grep "const Version " version/version.go | sed -E 's/.*"(.+)"$$/\1/')
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+DIRTY" || true)
+GIT_BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 BUILD_DATE=$(shell date '+%Y-%m-%d-%H:%M:%S')
 IMAGE_NAME := "{{cookiecutter.app_name|lower}}"
 
@@ -21,9 +22,12 @@ help:
 	@echo '    make clean           Clean the directory tree.'
 	@echo '    make coverage-html   Generate test coverage report.'
 	@echo '    make dep             Update dependencies.'
+	@echo '    make deps            Download Go modules.'
+	@echo '    make fmt             Format Go source files.'
 	@echo '    make generate        Generate code from proto files.'
 	@echo '    make help            Show this message.'
-	@echo '    make lint            Run linters on the project.'
+	@echo '    make lint            Run linters and vulnerability check.'
+	@echo '    make vulncheck       Run Go vulnerability check.'
 	@echo '    make mock            Generate mocks for interfaces.'
 	@echo '    make run             Run the project locally.'
 	@echo '    make run-docker      Run the project in a docker container.'
@@ -39,7 +43,7 @@ build:
 build-alpine:
 	@echo "building ${BIN_NAME} ${VERSION}"
 	@echo "GOPATH=${GOPATH}"
-	go build -ldflags '-w -linkmode external -extldflags "-static" -X {{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X {{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version.BuildDate=${BUILD_DATE} -X {{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version.Branch=${GIT_BRANCH} ' -o bin/${BIN_NAME}
+	CGO_ENABLED=0 go build -ldflags '-w -X {{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version.GitCommit=${GIT_COMMIT}${GIT_DIRTY} -X {{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version.BuildDate=${BUILD_DATE} -X {{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version.Branch=${GIT_BRANCH}' -o bin/${BIN_NAME}
 
 build-docker:
 	@echo "building image ${BIN_NAME} ${VERSION} $(GIT_COMMIT)"
@@ -48,14 +52,11 @@ build-docker:
 dep:
 	go mod tidy
 
-install:
-	go install \
-		github.com/vektra/mockery/v2 \
-		github.com/bufbuild/buf/cmd/buf \
-		github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+deps:
+	go mod download
 
-generate: install
-	buf generate --path proto/*.proto
+generate: deps
+	go tool buf generate proto
 
 clean:
 	@test ! -e bin/${BIN_NAME} || rm bin/${BIN_NAME}
@@ -69,14 +70,19 @@ coverage-html:
 	go tool cover -html=cover.out -o=cover.html
 
 bench:
-	# -run=^B negates all tests
-	go test -bench=. -run=^B -benchtime 10s -benchmem ./...
+	go test -bench=. -run=^$$ -benchtime 10s -benchmem ./...
 
-lint: install
-	golangci-lint run --timeout 5m
+lint: deps vulncheck
+	go tool golangci-lint run --timeout 5m
 
-mock: install
-	mockery --config .mockery.yaml
+vulncheck: deps
+	go tool govulncheck ./...
+
+mock: deps
+	go tool mockery --config .mockery.yaml
+
+fmt:
+	gofmt -w .
 
 run: build
 	@echo

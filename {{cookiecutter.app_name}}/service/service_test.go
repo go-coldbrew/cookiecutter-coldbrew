@@ -71,21 +71,27 @@ func TestError(t *testing.T) {
 }
 
 func BenchmarkEcho(b *testing.B) {
-	// This is a benchmark test for Echo function
-	// its not really helpful in this case but used as an example to show how to write benchmark tests
 	const prefix = "testPrefix"
 	const msg = "hello"
+	const expected = prefix + ": " + msg
 
 	cfg := config.Get()
 	cfg.Prefix = prefix
 	s, err := New(cfg)
-	assert.NoError(b, err)
-	assert.NotNil(b, s)
+	if err != nil {
+		b.Fatal(err)
+	}
 
+	ctx := context.Background()
+	req := &proto.EchoRequest{Msg: msg}
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		resp, err := s.Echo(context.Background(), &proto.EchoRequest{Msg: msg})
-		assert.NoError(b, err)
-		assert.NotNil(b, resp)
-		assert.Equal(b, prefix+": "+msg, resp.Msg)
+		resp, err := s.Echo(ctx, req)
+		if err != nil {
+			b.Fatal(err)
+		}
+		if resp.Msg != expected {
+			b.Fatalf("unexpected response: %s", resp.Msg)
+		}
 	}
 }
