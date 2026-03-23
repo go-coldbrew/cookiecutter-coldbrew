@@ -24,7 +24,7 @@ def default_context():
         "project_short_description": "A test service.",
         "docker_image": "alpine:latest",
         "docker_build_image": "golang",
-        "docker_build_image_version": "1.25",
+        "docker_build_image_version": "1.26",
     }
 
 

@@ -7,7 +7,7 @@
   "project_short_description": "{{cookiecutter.name}} is a Golang project.",
   "docker_image": "alpine:latest",
   "docker_build_image": "golang",
-  "docker_build_image_version": ["1.25", "1.24"],
+  "docker_build_image_version": ["1.26", "1.25"],
   "_copy_without_render": [
     "third_party/OpenAPI/swagger-ui*",
     "third_party/*js.map",

@@ -54,7 +54,7 @@ class TestProjectStructure:
             "project_short_description": "A test service.",
             "docker_image": "alpine:latest",
             "docker_build_image": "golang",
-            "docker_build_image_version": "1.25",
+            "docker_build_image_version": "1.26",
         })
         assert project.name == "my_cool_service"
         assert project.is_dir()
@@ -143,7 +143,7 @@ class TestGoFileContent:
     def test_go_mod_go_version(self, bake_project):
         project = bake_project()
         content = (project / "go.mod").read_text()
-        assert "go 1.25" in content
+        assert "go 1.26" in content
 
     def test_main_go_imports(self, bake_project):
         project = bake_project()
@@ -243,7 +243,7 @@ class TestDockerContent:
     def test_dockerfile_images(self, bake_project):
         project = bake_project()
         content = (project / "Dockerfile").read_text()
-        assert "FROM golang:1.25 AS build-stage" in content
+        assert "FROM golang:1.26 AS build-stage" in content
         assert "FROM alpine:latest" in content
 
     def test_dockerignore_excludes_secrets(self, bake_project):
@@ -374,7 +374,7 @@ class TestConfigFiles:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("go_version", ["1.25", "1.24"])
+@pytest.mark.parametrize("go_version", ["1.26", "1.25"])
 def test_go_version_selection(bake_project, go_version):
     project = bake_project({"docker_build_image_version": go_version})
     go_mod = (project / "go.mod").read_text()
