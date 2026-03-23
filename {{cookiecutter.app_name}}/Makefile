@@ -52,6 +52,7 @@ dep:
 
 install:
 	go mod download
+	go install tool
 
 generate: install
 	go tool buf generate proto
