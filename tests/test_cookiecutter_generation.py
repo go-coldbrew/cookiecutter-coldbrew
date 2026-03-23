@@ -249,7 +249,7 @@ class TestDockerContent:
     def test_dockerignore_excludes_secrets(self, bake_project):
         project = bake_project()
         content = (project / ".dockerignore").read_text()
-        for entry in [".git", "local.env", "vendor"]:
+        for entry in ["local.env", "vendor", ".github"]:
             assert entry in content
 
 
