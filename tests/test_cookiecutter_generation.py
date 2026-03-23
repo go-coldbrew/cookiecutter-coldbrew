@@ -286,10 +286,6 @@ class TestMakefileContent:
         assert "fmt:" in content
         assert "gofmt -w ." in content
 
-    def test_doc_target(self, bake_project):
-        project = bake_project()
-        content = (project / "Makefile").read_text()
-        assert "doc:" in content
 
 
 # ---------------------------------------------------------------------------

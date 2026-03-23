@@ -1,4 +1,4 @@
-.PHONY: build build-alpine clean test default install generate run run-docker fmt doc help bench build-docker coverage-html dep lint mock runj
+.PHONY: build build-alpine clean test default install generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj
 
 BIN_NAME={{cookiecutter.app_name}}
 
@@ -22,7 +22,6 @@ help:
 	@echo '    make clean           Clean the directory tree.'
 	@echo '    make coverage-html   Generate test coverage report.'
 	@echo '    make dep             Update dependencies.'
-	@echo '    make doc             Generate documentation.'
 	@echo '    make fmt             Format Go source files.'
 	@echo '    make generate        Generate code from proto files.'
 	@echo '    make help            Show this message.'
@@ -79,9 +78,6 @@ mock: install
 
 fmt:
 	gofmt -w .
-
-doc:
-	go run github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest ./... > README.md
 
 run: build
 	@echo
