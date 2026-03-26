@@ -35,6 +35,13 @@ jobs:
         cache: true
     - name: Test
       run: make test
+    - name: Generate coverage report
+      run: go tool gocover-cobertura < cover.out > cover.xml
+    - name: Upload coverage
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: cover.xml
 
   benchmark:
     concurrency: {% raw -%}ci-${{ github.job }}-${{ github.ref }}{%- endraw %}

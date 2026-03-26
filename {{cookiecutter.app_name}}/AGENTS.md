@@ -41,8 +41,12 @@ make run-docker      # Run in Docker container
 │   └── version.go       # Build-time version info (injected via ldflags)
 ├── third_party/
 │   └── OpenAPI/         # Swagger UI assets (embedded via go:embed)
+├── .github/workflows/
+│   └── go.yml           # GitHub Actions CI (build, test, bench, lint)
+├── .gitlab-ci.yml       # GitLab CI (unit-test, lint, benchmark)
 ├── Makefile             # Build automation
 ├── Dockerfile           # Multi-stage Docker build
+├── .golangci.yml        # Linter configuration
 ├── buf.yaml             # Protobuf linting rules
 ├── buf.gen.yaml         # Code generation plugins
 └── local.env.example    # Example environment variables (copy to local.env)
