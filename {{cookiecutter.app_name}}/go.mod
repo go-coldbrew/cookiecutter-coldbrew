@@ -12,7 +12,7 @@ tool (
 
 require (
 	github.com/boumenot/gocover-cobertura v1.2.0
-	github.com/bufbuild/buf v1.42.0
+	github.com/bufbuild/buf v1.66.1
 	github.com/go-coldbrew/core v0.1.33
 	github.com/go-coldbrew/errors v0.2.5
 	github.com/go-coldbrew/log v0.2.7
