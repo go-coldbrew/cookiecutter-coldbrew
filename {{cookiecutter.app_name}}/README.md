@@ -42,6 +42,18 @@ To run the image, run:
 $ make run-docker
 ```
 
+## CI/CD
+
+The project includes ready-to-use CI pipelines for both GitHub and GitLab. Delete whichever platform you don't use.
+
+### GitHub Actions (`.github/workflows/go.yml`)
+
+Runs on push to `main`/`master` and on pull requests. Four parallel jobs: **build**, **test** (race detector + coverage), **benchmark**, and **lint** (govulncheck + golangci-lint). Each job has concurrency control to cancel duplicate runs.
+
+### GitLab CI (`.gitlab-ci.yml`)
+
+Three jobs in a single `test` stage: **unit-test** (with Cobertura coverage report), **lint** (golangci-lint + govulncheck), and **benchmark**. Go module caching is enabled.
+
 ## Adding a new endpoint to the API
 
 Our service is grpc first. We use [grpc-gateway] to automatically map HTTP requests to gRPC requests. This means that you can add a new endpoint to the API by adding a new rpc to `service {{cookiecutter.service_name}}` in `proto/{{cookiecutter.app_name|lower}}.proto` file. Then, you can run `make generate` to generate grpc/http endpoints.
