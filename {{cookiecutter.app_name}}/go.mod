@@ -13,9 +13,9 @@ tool (
 require (
 	github.com/boumenot/gocover-cobertura v1.2.0
 	github.com/bufbuild/buf v1.42.0
-	github.com/go-coldbrew/core v0.1.26
-	github.com/go-coldbrew/errors v0.2.1
-	github.com/go-coldbrew/log v0.2.4
+	github.com/go-coldbrew/core v0.1.33
+	github.com/go-coldbrew/errors v0.2.5
+	github.com/go-coldbrew/log v0.2.7
 	github.com/golangci/golangci-lint/v2 v2.8.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -131,10 +131,10 @@ require (
 	github.com/getsentry/raven-go v0.2.0 // indirect
 	github.com/ghostiam/protogetter v0.3.18 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect
-	github.com/go-coldbrew/hystrixprometheus v0.1.1 // indirect
-	github.com/go-coldbrew/interceptors v0.1.8 // indirect
-	github.com/go-coldbrew/options v0.2.3 // indirect
-	github.com/go-coldbrew/tracing v0.0.6 // indirect
+	github.com/go-coldbrew/hystrixprometheus v0.1.2 // indirect
+	github.com/go-coldbrew/interceptors v0.1.12 // indirect
+	github.com/go-coldbrew/options v0.2.6 // indirect
+	github.com/go-coldbrew/tracing v0.1.0 // indirect
 	github.com/go-critic/go-critic v0.14.3 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
