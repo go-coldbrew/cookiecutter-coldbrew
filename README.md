@@ -59,7 +59,7 @@ make run
 
 Your service starts on `:9090` (gRPC) and `:9091` (HTTP/Swagger).
 
-For a full walkthrough, see the [Getting Started](https://docs.coldbrew.cloud/getting-started/) guide.
+For a full walkthrough, see the [Getting Started](https://docs.coldbrew.cloud/getting-started) guide.
 
 ## CI/CD
 
@@ -84,6 +84,6 @@ make run-docker
 
 ## Documentation
 
-- [Getting Started](https://docs.coldbrew.cloud/getting-started/) — Full walkthrough
+- [Getting Started](https://docs.coldbrew.cloud/getting-started) — Full walkthrough
 - [ColdBrew Documentation](https://docs.coldbrew.cloud) — Framework reference
 - [How-To Guides](https://docs.coldbrew.cloud/howto/) — Tracing, logging, metrics, and more
