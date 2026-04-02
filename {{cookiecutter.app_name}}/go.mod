@@ -11,9 +11,9 @@ tool (
 )
 
 require (
-	github.com/go-coldbrew/core v0.1.33
-	github.com/go-coldbrew/errors v0.2.5
-	github.com/go-coldbrew/log v0.2.7
+	github.com/go-coldbrew/core v0.1.39
+	github.com/go-coldbrew/errors v0.2.8
+	github.com/go-coldbrew/log v0.2.8
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260319201613-d00831a3d3e7
