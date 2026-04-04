@@ -54,7 +54,18 @@ func (s *svc) Error(ctx context.Context, req *proto.EchoRequest) (*proto.EchoRes
 }
 
 func (s *svc) Stop() {
-	//  TODO: Add your cleanup code here
+	// Close database connections, flush buffers, etc.
+}
+
+// FailCheck implements core.CBGracefulStopper.
+// Called by ColdBrew during graceful shutdown to fail the readiness probe
+// before stopping the server, allowing the load balancer to drain traffic.
+func (s *svc) FailCheck(fail bool) {
+	if fail {
+		SetNotReady()
+	} else {
+		SetReady()
+	}
 }
 
 // Creates a new Service instance and returns it
