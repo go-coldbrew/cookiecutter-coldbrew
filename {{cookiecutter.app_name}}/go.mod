@@ -13,7 +13,8 @@ tool (
 require (
 	github.com/go-coldbrew/core v0.1.42
 	github.com/go-coldbrew/errors v0.2.11
-	github.com/go-coldbrew/log v0.2.9
+	github.com/go-coldbrew/log v0.3.0
+	github.com/go-coldbrew/options v0.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
