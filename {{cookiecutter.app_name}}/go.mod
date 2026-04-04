@@ -11,8 +11,8 @@ tool (
 )
 
 require (
-	github.com/go-coldbrew/core v0.1.42
-	github.com/go-coldbrew/errors v0.2.11
+	github.com/go-coldbrew/core v0.1.43
+	github.com/go-coldbrew/errors v0.2.12
 	github.com/go-coldbrew/log v0.3.0
 	github.com/go-coldbrew/options v0.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
