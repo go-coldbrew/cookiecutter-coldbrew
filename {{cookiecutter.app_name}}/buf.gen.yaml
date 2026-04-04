@@ -12,6 +12,6 @@ plugins:
   - remote: buf.build/grpc-ecosystem/openapiv2:v2.28.0
     out: third_party/OpenAPI
     opt: ""
-  - remote: buf.build/community/planetscale-vtprotobuf:v0.6.1
+  - remote: buf.build/community/planetscale-vtprotobuf:v0.6.0
     out: proto
     opt: paths=source_relative,features=marshal+unmarshal+size+clone+pool+equal
