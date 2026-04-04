@@ -11,7 +11,7 @@ tool (
 )
 
 require (
-	github.com/go-coldbrew/core v0.1.43
+	github.com/go-coldbrew/core v0.1.44
 	github.com/go-coldbrew/errors v0.2.13
 	github.com/go-coldbrew/log v0.3.1
 	github.com/go-coldbrew/options v0.3.0
