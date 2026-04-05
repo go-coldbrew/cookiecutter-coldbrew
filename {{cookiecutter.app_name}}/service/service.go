@@ -54,7 +54,7 @@ func (s *svc) Error(ctx context.Context, req *proto.EchoRequest) (*proto.EchoRes
 }
 
 func (s *svc) Stop() {
-	//  TODO: Add your cleanup code here
+	// Close database connections, flush buffers, etc.
 }
 
 // Creates a new Service instance and returns it
