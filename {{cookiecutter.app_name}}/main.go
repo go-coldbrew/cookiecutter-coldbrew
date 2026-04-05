@@ -18,6 +18,13 @@ import (
 	openapi "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/third_party/OpenAPI"
 )
 
+// Compile-time interface assertions.
+var (
+	_ core.CBService          = (*cbSvc)(nil)
+	_ core.CBStopper          = (*cbSvc)(nil)
+	_ core.CBGracefulStopper  = (*cbSvc)(nil)
+)
+
 // cbSvc is the service implementation of ColdBrew service
 type cbSvc struct {
 	stopper core.CBStopper

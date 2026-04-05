@@ -57,17 +57,6 @@ func (s *svc) Stop() {
 	// Close database connections, flush buffers, etc.
 }
 
-// FailCheck implements core.CBGracefulStopper.
-// Called by ColdBrew during graceful shutdown to fail the readiness probe
-// before stopping the server, allowing the load balancer to drain traffic.
-func (s *svc) FailCheck(fail bool) {
-	if fail {
-		SetNotReady()
-	} else {
-		SetReady()
-	}
-}
-
 // Creates a new Service instance and returns it
 func New(cfg config.Config) (*svc, error) {
 	// TODO: Application should validate the config here and return an error if it is invalid or missing
