@@ -4,6 +4,19 @@ FROM {{cookiecutter.docker_build_image}}:{{cookiecutter.docker_build_image_versi
 LABEL app="build-{{cookiecutter.app_name}}"
 LABEL REPO="https://{{cookiecutter.source_path}}/{{cookiecutter.app_name}}"
 
+ARG GOPRIVATE={{cookiecutter.goprivate}}
+ENV GOPRIVATE=${GOPRIVATE}
+
+# --- Private module authentication (uncomment one) ---
+# Option 1: SSH key (mount host SSH agent or key)
+# RUN git config --global url."git@github.com:".insteadOf "https://github.com/"
+# Option 2: .netrc with personal access token (GitHub)
+# ARG GITHUB_TOKEN
+# RUN echo "machine github.com login x-access-token password ${GITHUB_TOKEN}" > ~/.netrc
+# Option 3: .netrc with deploy token (GitLab)
+# ARG GITLAB_TOKEN
+# RUN echo "machine gitlab.com login deploy-token password ${GITLAB_TOKEN}" > ~/.netrc
+
 WORKDIR /app
 
 COPY . .

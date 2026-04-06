@@ -1,6 +1,8 @@
 .PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck
 
 BIN_NAME={{cookiecutter.app_name}}
+GOPRIVATE ?= {{cookiecutter.goprivate}}
+export GOPRIVATE
 
 SHELL := $(shell which bash)
 VERSION := $(shell grep "const Version " version/version.go | sed -E 's/.*"(.+)"$$/\1/')

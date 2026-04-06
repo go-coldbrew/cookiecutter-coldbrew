@@ -9,6 +9,15 @@ on:
   pull_request:
     branches: [ "main" , "master"]
 
+env:
+  GOPRIVATE: {{cookiecutter.goprivate}}
+
+# Uncomment for private Go modules:
+#   - name: Configure private modules
+#     run: git config --global url."https://x-access-token:$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+#     env:
+#       GITHUB_TOKEN: {% raw %}${{ secrets.GO_PRIVATE_TOKEN }}{% endraw %}
+
 jobs:
   build:
     concurrency:

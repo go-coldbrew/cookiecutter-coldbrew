@@ -95,6 +95,14 @@ make run-docker      # Run in Docker container
 - Create the service with `New(config.Get())` to test with real config
 - Benchmarks use `func BenchmarkX(b *testing.B)` with `b.ResetTimer()` before the hot loop
 
+### Private modules
+
+GOPRIVATE is pre-configured in Makefile, Dockerfile, and CI workflows. For private repos:
+- **Local dev**: `git config --global url."git@github.com:".insteadOf "https://github.com/"` (SSH) or add a `.netrc` with a PAT
+- **Docker**: uncomment the auth section in `Dockerfile`
+- **CI**: uncomment the auth steps in `.github/workflows/go.yml` or `.gitlab-ci.yml`
+- See [Private Modules guide](https://docs.coldbrew.cloud/howto/private-modules/) for details
+
 ## Rules
 
 - **Never edit generated files** — files in `proto/*.pb.go`, `proto/*_grpc.pb.go`, `proto/*.gw.go` are generated. Edit the `.proto` file and run `make generate`.
