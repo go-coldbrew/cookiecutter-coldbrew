@@ -11,7 +11,7 @@ image: "golang:{{cookiecutter.docker_build_image_version}}"
   before_script:
     - mkdir -p .go/pkg/mod
     # Uncomment for private Go modules:
-    # - echo "machine gitlab.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc
+    # - echo "machine gitlab.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc && chmod 600 ~/.netrc
 
 .only_production: &only_production
   refs:
