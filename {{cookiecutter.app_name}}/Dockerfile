@@ -4,6 +4,20 @@ FROM {{cookiecutter.docker_build_image}}:{{cookiecutter.docker_build_image_versi
 LABEL app="build-{{cookiecutter.app_name}}"
 LABEL REPO="https://{{cookiecutter.source_path}}/{{cookiecutter.app_name}}"
 
+ARG GOPRIVATE={{cookiecutter.goprivate}}
+ENV GOPRIVATE=${GOPRIVATE}
+
+# --- Private module authentication (uncomment one) ---
+# Prefer BuildKit secret mounts to avoid baking credentials into image layers.
+# Option 1: SSH (use: DOCKER_BUILDKIT=1 docker build --ssh default .)
+# RUN --mount=type=ssh git config --global url."git@github.com:".insteadOf "https://github.com/"
+# Option 2: .netrc via BuildKit secret (use: docker build --secret id=netrc,src=$HOME/.netrc .)
+# RUN --mount=type=secret,id=netrc,target=/root/.netrc true
+# Option 3: Token via build arg (less secure — visible in image history)
+# ARG GITHUB_TOKEN
+# RUN echo "machine github.com login x-access-token password ${GITHUB_TOKEN}" > ~/.netrc && \
+#     make build-alpine && rm -f ~/.netrc
+
 WORKDIR /app
 
 COPY . .

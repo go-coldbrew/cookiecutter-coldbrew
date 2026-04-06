@@ -4,11 +4,14 @@ image: "golang:{{cookiecutter.docker_build_image_version}}"
   variables: &go_variables
     GOFLAGS: "-mod=readonly"
     GOMODCACHE: "$CI_PROJECT_DIR/.go/pkg/mod"
+    GOPRIVATE: "{{cookiecutter.goprivate}}"
   cache:
     paths:
       - .go/pkg/mod/
   before_script:
     - mkdir -p .go/pkg/mod
+    # Uncomment for private Go modules:
+    # - echo "machine gitlab.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc && chmod 600 ~/.netrc
 
 .only_production: &only_production
   refs:

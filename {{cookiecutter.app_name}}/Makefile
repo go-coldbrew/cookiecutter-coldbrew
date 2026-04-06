@@ -1,6 +1,8 @@
 .PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck
 
 BIN_NAME={{cookiecutter.app_name}}
+GOPRIVATE ?= {{cookiecutter.goprivate}}
+export GOPRIVATE
 
 SHELL := $(shell which bash)
 VERSION := $(shell grep "const Version " version/version.go | sed -E 's/.*"(.+)"$$/\1/')
@@ -47,7 +49,7 @@ build-alpine:
 
 build-docker:
 	@echo "building image ${BIN_NAME} ${VERSION} $(GIT_COMMIT)"
-	docker build --build-arg VERSION=${VERSION} --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) -t $(IMAGE_NAME):local .
+	docker build --build-arg VERSION=${VERSION} --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) --build-arg GOPRIVATE=$(GOPRIVATE) -t $(IMAGE_NAME):local .
 
 dep:
 	go mod tidy

@@ -4,6 +4,7 @@
   "app_name": "{{cookiecutter.name | replace(' ', '_') | lower}}",
   "grpc_package": "com.github.ankurs",
   "service_name": "MySvc",
+  "goprivate": "",
   "project_short_description": "{{cookiecutter.name}} is a Golang project.",
   "docker_image": "alpine:latest",
   "docker_build_image": "golang",

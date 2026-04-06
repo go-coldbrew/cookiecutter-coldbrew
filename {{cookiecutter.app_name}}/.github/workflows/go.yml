@@ -9,6 +9,9 @@ on:
   pull_request:
     branches: [ "main" , "master"]
 
+env:
+  GOPRIVATE: "{{cookiecutter.goprivate}}"
+
 jobs:
   build:
     concurrency:
@@ -17,6 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    # Uncomment for private Go modules:
+    # - name: Configure private modules
+    #   run: git config --global url."https://x-access-token:$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+    #   env:
+    #     GITHUB_TOKEN: {% raw %}${{ secrets.GO_PRIVATE_TOKEN }}{% endraw %}
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
