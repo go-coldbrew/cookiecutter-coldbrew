@@ -22,7 +22,7 @@ modules:
     lint:
       disallow_comment_ignores: true
 deps:
-  - buf.build/envoyproxy/protoc-gen-validate
+  - buf.build/bufbuild/protovalidate
   - buf.build/googleapis/googleapis
   - buf.build/grpc/grpc
   - buf.build/grpc-ecosystem/protoc-gen-swagger
