@@ -11,7 +11,7 @@ tool (
 )
 
 require (
-	github.com/go-coldbrew/core v0.1.44
+	github.com/go-coldbrew/core v0.1.45
 	github.com/go-coldbrew/errors v0.2.13
 	github.com/go-coldbrew/log v0.3.1
 	github.com/go-coldbrew/options v0.3.0
@@ -122,7 +122,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghostiam/protogetter v0.3.20 // indirect
-	github.com/go-coldbrew/interceptors v0.1.17 // indirect
+	github.com/go-coldbrew/interceptors v0.1.20 // indirect
 	github.com/go-coldbrew/options v0.2.7 // indirect
 	github.com/go-coldbrew/tracing v0.2.1 // indirect
 	github.com/go-critic/go-critic v0.14.3 // indirect
