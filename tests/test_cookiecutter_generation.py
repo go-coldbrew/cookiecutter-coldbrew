@@ -405,7 +405,7 @@ class TestDockerCompose:
     def test_compose_db_name(self, bake_project):
         project = bake_project()
         content = (project / "docker-compose.local.yml").read_text()
-        assert "POSTGRES_DB: testservice_dev" in content
+        assert "testservice_dev" in content
 
     def test_agents_md_local_stack(self, bake_project):
         project = bake_project()

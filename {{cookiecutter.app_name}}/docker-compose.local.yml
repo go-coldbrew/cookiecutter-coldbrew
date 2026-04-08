@@ -6,8 +6,8 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_DB: {{cookiecutter.app_name}}_dev
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: "{{cookiecutter.app_name}}_dev"
+      POSTGRES_PASSWORD: "postgres"
 
   redis:
     image: redis:8-alpine
