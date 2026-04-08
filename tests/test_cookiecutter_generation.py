@@ -87,6 +87,10 @@ class TestProjectStructure:
             "service/healthcheck.go",
             "service/service_test.go",
             "service/healthcheck_test.go",
+            "service/metrics/types.go",
+            "service/metrics/metrics.go",
+            "service/metrics/labels.go",
+            "service/metrics/metrics_test.go",
             "version/version.go",
             ".github/workflows/go.yml",
             ".gitlab-ci.yml",
@@ -176,6 +180,26 @@ class TestGoFileContent:
         content = (project / "service/service.go").read_text()
         assert "func (s *svc) Stop()" in content
         assert "func (s*svc)" not in content
+
+    def test_metrics_interface(self, bake_project):
+        project = bake_project()
+        content = (project / "service/metrics/types.go").read_text()
+        assert "type Metrics interface" in content
+        assert "IncEchoTotal" in content
+        assert "ObserveEchoDuration" in content
+
+    def test_metrics_uses_promauto(self, bake_project):
+        project = bake_project()
+        content = (project / "service/metrics/metrics.go").read_text()
+        assert "promauto" in content
+        assert "_duration_seconds" in content
+        assert '_namespace = "testservice"' in content or 'namespace = "testservice"' in content
+
+    def test_service_wires_metrics(self, bake_project):
+        project = bake_project()
+        content = (project / "service/service.go").read_text()
+        assert "metrics.New()" in content
+        assert "monitoring metrics.Metrics" in content
 
     def test_version_app_name(self, bake_project):
         project = bake_project()
