@@ -95,7 +95,10 @@ def remove_docker_compose():
     if os.path.exists(deploy_dir):
         shutil.rmtree(deploy_dir)
 
-if os.environ.get("COOKIECUTTER_SKIP_PROTO_INIT") != "1":
+if os.environ.get("COOKIECUTTER_SKIP_PROTO_INIT") == "1":
+    print("WARNING: COOKIECUTTER_SKIP_PROTO_INIT=1 — skipping proto initialization.")
+    print("  Run 'make generate && make mock && go mod tidy' manually before building.")
+else:
     init_proto()
 
 setup_local_env()

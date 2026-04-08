@@ -9,6 +9,11 @@ services:
     environment:
       POSTGRES_DB: "{{cookiecutter.app_name}}_dev"
       POSTGRES_PASSWORD: "postgres"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
 
   mysql:
     image: mysql:8
@@ -19,6 +24,11 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_DATABASE: "{{cookiecutter.app_name}}_dev"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
 
   cockroachdb:
     image: cockroachdb/cockroach:latest
@@ -43,6 +53,11 @@ services:
     profiles: ["redis"]
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
 
   valkey:
     image: valkey/valkey:8-alpine
@@ -95,6 +110,11 @@ services:
       discovery.type: "single-node"
       xpack.security.enabled: "false"
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
 
   # --- AWS ---
   ministack:
@@ -169,6 +189,8 @@ services:
     profiles: ["obs"]
     ports:
       - "9100:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./deploy/local/prometheus.yml:/etc/prometheus/prometheus.yml
 

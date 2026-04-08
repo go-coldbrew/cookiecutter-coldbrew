@@ -39,7 +39,7 @@ $ make local-stack PROFILES="postgres kafka obs"  # Override with specific servi
 $ make run                                        # Run the app (fast native build)
 ```
 
-Available profiles: `postgres`, `mysql`, `cockroachdb`, `mongodb`, `redis`, `valkey`, `memcached`, `kafka`, `nats`, `elasticsearch`, `ministack`, `dynamodb`, `spanner`, `pubsub`, `bigtable`, `firestore`, `adminer`, `obs`
+Available profiles: `postgres`, `mysql`, `cockroachdb`, `mongodb`, `redis`, `valkey`, `memcached`, `kafka`, `nats`, `elasticsearch`, `ministack`, `dynamodb`, `spanner`, `pubsub`, `bigtable`, `firestore`, `alloydb`, `adminer`, `obs`
 
 ```console
 $ make local-stack-down    # Stop infrastructure

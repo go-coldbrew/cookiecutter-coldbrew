@@ -147,7 +147,7 @@ make run                    # start the app in one terminal
 make loadtest               # run load test in another terminal
 ```
 
-The default config (`misc/loadtest/echo.json`) sends 1000 requests at concurrency 10 to the Echo RPC via gRPC reflection. Edit the file to adjust total, concurrency, or target a different RPC.
+The default config (`misc/loadtest/echo.json`) sends requests for 10 seconds at concurrency 10 to the Echo RPC via gRPC reflection. Edit the file to adjust duration, concurrency, or target a different RPC.
 
 With the observability stack running (`make local-stack-obs`), load test results are visible in the Grafana dashboard in real-time.
 
