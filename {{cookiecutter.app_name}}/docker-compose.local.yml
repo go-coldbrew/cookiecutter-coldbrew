@@ -1,13 +1,4 @@
 services:
-  {{cookiecutter.app_name}}:
-    build: .
-    restart: always
-    ports:
-      - "9090:9090"
-      - "9091:9091"
-    env_file:
-      - local.env
-
   db:
     image: postgres:17-alpine
     restart: always

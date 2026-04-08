@@ -1,4 +1,4 @@
-.PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck local-stack local-stack-down local-stack-logs local-stack-rm local-stack-reset local-psql
+.PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck local-stack local-stack-down local-stack-logs local-stack-rm local-stack-reset local-psql loadtest
 
 BIN_NAME={{cookiecutter.app_name}}
 GOPRIVATE ?= {{cookiecutter.goprivate}}
@@ -35,6 +35,7 @@ help:
 	@echo '    make run-docker      Run the project in a docker container.'
 	@echo '    make runj            Run the project locally with jq log parsing.'
 	@echo '    make test            Run tests.'
+	@echo '    make loadtest         Run gRPC load test (ghz) against the running service.'
 	@echo '    make local-stack     Start local dev stack (PROFILES="deps" for db/redis, "deps obs" for full).'
 	@echo '    make local-stack-down  Stop local dev stack.'
 	@echo '    make local-stack-logs  Follow local dev stack logs.'
@@ -108,8 +109,7 @@ run-docker: build-docker
 
 # Local development stack (docker-compose)
 # Usage:
-#   make local-stack                        # service only
-#   make local-stack PROFILES="deps"        # + postgres, redis, adminer
+#   make local-stack PROFILES="deps"        # postgres, redis, adminer
 #   make local-stack PROFILES="deps obs"    # + prometheus, grafana
 #   make local-stack-down PROFILES="deps"   # tear down with deps
 
@@ -118,6 +118,15 @@ PROFILE_FLAGS := $(foreach p,$(PROFILES),--profile $(p))
 
 local-stack:
 	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) up -d --wait
+	@echo
+	@echo "Local stack is running. Run 'make run' to start the app."
+	@echo "Endpoints:"
+	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port db 5432 2>/dev/null | sed 's|.*:\(.*\)|  Postgres:    localhost:\1|' || true
+	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port redis 6379 2>/dev/null | sed 's|.*:\(.*\)|  Redis:       localhost:\1|' || true
+	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port adminer 8080 2>/dev/null | sed 's|.*:\(.*\)|  Adminer:     http://localhost:\1|' || true
+	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port prometheus 9090 2>/dev/null | sed 's|.*:\(.*\)|  Prometheus:  http://localhost:\1|' || true
+	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port grafana 3000 2>/dev/null | sed 's|.*:\(.*\)|  Grafana:     http://localhost:\1  (admin/admin)|' || true
+	@echo
 
 local-stack-down:
 	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) down
@@ -132,3 +141,6 @@ local-stack-reset: local-stack-down local-stack-rm local-stack
 
 local-psql:
 	docker exec -ti {{cookiecutter.app_name}}-db-1 bash -c 'PGPASSWORD=postgres psql -U postgres -d {{cookiecutter.app_name}}_dev'
+
+loadtest:
+	ghz --config misc/loadtest/echo.json

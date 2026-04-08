@@ -69,6 +69,7 @@ class TestProjectStructure:
             "deploy/local/grafana/provisioning/datasources/prometheus.yml",
             "deploy/local/grafana/provisioning/dashboards/dashboards.yml",
             "deploy/local/grafana/dashboards/coldbrew-service.json",
+            "misc/loadtest/echo.json",
             "go.mod",
             "README.md",
             "AGENTS.md",
@@ -362,12 +363,13 @@ class TestCIContent:
 
 
 class TestDockerCompose:
-    def test_compose_service_name(self, bake_project):
+    def test_compose_infra_services(self, bake_project):
         project = bake_project()
         content = (project / "docker-compose.local.yml").read_text()
-        assert "testservice:" in content
-        assert "9090:9090" in content
-        assert "9091:9091" in content
+        assert "db:" in content
+        assert "redis:" in content
+        assert "prometheus:" in content
+        assert "grafana:" in content
 
     def test_compose_profiles(self, bake_project):
         project = bake_project()
@@ -398,6 +400,13 @@ class TestDockerCompose:
         content = (project / "docker-compose.local.yml").read_text()
         assert "deploy/local/grafana/provisioning:/etc/grafana/provisioning" in content
         assert "deploy/local/grafana/dashboards:/var/lib/grafana/dashboards" in content
+
+    def test_loadtest_config(self, bake_project):
+        project = bake_project()
+        content = (project / "misc/loadtest/echo.json").read_text()
+        assert "com.github.testorg.TestSvc/Echo" in content
+        assert '"reflect": true' in content
+        assert "localhost:9090" in content
 
     def test_docker_compose_disabled(self, bake_project):
         project = bake_project({"include_docker_compose": "false"}, with_hooks=True)

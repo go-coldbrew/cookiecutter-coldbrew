@@ -25,8 +25,35 @@ The Makefile contains a number of useful commands to help you get started. Here 
 - `make lint` - Runs the linter
 - `make run` - Runs the application
 - `make runj` - Runs the application with json logs parsing with jq
+- `make loadtest` - Runs gRPC load test ([ghz](https://ghz.sh)) against the running service
 - `make build` - Builds the application
 - `make generate` - Generates the code
+
+## Local Development Stack
+
+Start infrastructure dependencies with docker-compose, then run the app natively:
+
+```console
+$ make local-stack PROFILES="deps"        # Start Postgres, Redis, Adminer
+$ make local-stack PROFILES="deps obs"    # + Prometheus, Grafana (with pre-built dashboard)
+$ make run                                # Run the app (fast native build)
+```
+
+Infrastructure management:
+
+```console
+$ make local-stack-down PROFILES="deps"   # Stop infrastructure
+$ make local-stack-reset PROFILES="deps"  # Reset infrastructure
+$ make local-psql                         # Open Postgres shell
+```
+
+Endpoints when running with all profiles:
+- **Swagger UI**: http://localhost:9091/swagger/
+- **Grafana**: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
+- **Prometheus**: http://localhost:9100
+- **Adminer**: http://localhost:8088
+- **Postgres**: localhost:5433
+- **Redis**: localhost:6379
 
 ## Docker
 

@@ -105,26 +105,44 @@ GOPRIVATE is pre-configured in Makefile, Dockerfile, and CI workflows. For priva
 
 ## Local Development Stack
 
-Start the service and dependencies with docker-compose:
+Start infrastructure with docker-compose, then run the app locally with `make run`:
 
 ```bash
-make local-stack                        # service only
-make local-stack PROFILES="deps"        # + Postgres, Redis, Adminer
-make local-stack PROFILES="deps obs"    # + Prometheus, Grafana
-make local-stack-logs                   # follow logs
-make local-stack-down                   # stop stack
-make local-stack-reset                  # stop, remove, restart
+# Start infrastructure
+make local-stack PROFILES="deps"        # Postgres, Redis, Adminer
+make local-stack PROFILES="deps obs"    # + Prometheus, Grafana (with pre-built dashboard)
+
+# Run the app (fast native build, no Docker)
+make run
+
+# Infrastructure management
+make local-stack-logs                   # follow infra logs
+make local-stack-down PROFILES="deps"   # stop infra
+make local-stack-reset PROFILES="deps"  # stop, remove, restart
 make local-psql                         # open Postgres shell
 ```
 
-Endpoints when running with all profiles:
-- Service HTTP/Swagger: http://localhost:9091/swagger/
+Endpoints:
+- Service HTTP/Swagger: http://localhost:9091/swagger/ (via `make run`)
 - Service gRPC: localhost:9090
 - Postgres: localhost:5433 (user: postgres, password: postgres, db: {{cookiecutter.app_name}}_dev)
 - Redis: localhost:6379
 - Adminer (DB UI): http://localhost:8088
 - Prometheus: http://localhost:9100
-- Grafana: http://localhost:3000 (admin/admin)
+- Grafana: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
+
+## Load Testing
+
+Run gRPC load tests against a locally running service using [ghz](https://ghz.sh):
+
+```bash
+make run                    # start the app in one terminal
+make loadtest               # run load test in another terminal
+```
+
+The default config (`misc/loadtest/echo.json`) sends 1000 requests at concurrency 10 to the Echo RPC via gRPC reflection. Edit the file to adjust total, concurrency, or target a different RPC.
+
+With the obs profile running (`make local-stack PROFILES="deps obs"`), load test results are visible in the Grafana dashboard in real-time.
 
 ## Rules
 
