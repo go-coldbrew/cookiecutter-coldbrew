@@ -152,10 +152,10 @@ local-stack:
 	@echo
 
 local-stack-obs:
-	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) $(PROFILE_FLAGS) --profile obs up -d --wait --remove-orphans
+	$(MAKE) local-stack PROFILES="$(PROFILES) obs"
 
 local-stack-down:
-	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) --profile "*" down
 
 local-stack-logs:
 	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) $(PROFILE_FLAGS) logs -f
