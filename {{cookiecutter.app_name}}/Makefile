@@ -1,4 +1,4 @@
-.PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck
+.PHONY: build build-alpine clean test default deps generate run run-docker fmt help bench build-docker coverage-html dep lint mock runj vulncheck local-stack local-stack-down local-stack-logs local-stack-rm local-stack-reset local-psql
 
 BIN_NAME={{cookiecutter.app_name}}
 GOPRIVATE ?= {{cookiecutter.goprivate}}
@@ -35,6 +35,11 @@ help:
 	@echo '    make run-docker      Run the project in a docker container.'
 	@echo '    make runj            Run the project locally with jq log parsing.'
 	@echo '    make test            Run tests.'
+	@echo '    make local-stack     Start local dev stack (PROFILES="deps" for db/redis, "deps obs" for full).'
+	@echo '    make local-stack-down  Stop local dev stack.'
+	@echo '    make local-stack-logs  Follow local dev stack logs.'
+	@echo '    make local-stack-reset Reset local dev stack (down + rm + up).'
+	@echo '    make local-psql      Open psql shell in local Postgres.'
 	@echo
 
 build:
@@ -100,3 +105,30 @@ runj: build
 
 run-docker: build-docker
 	docker run -p 9091:9091 -p 9090:9090 --env-file local.env ${IMAGE_NAME}:local
+
+# Local development stack (docker-compose)
+# Usage:
+#   make local-stack                        # service only
+#   make local-stack PROFILES="deps"        # + postgres, redis, adminer
+#   make local-stack PROFILES="deps obs"    # + prometheus, grafana
+#   make local-stack-down PROFILES="deps"   # tear down with deps
+
+COMPOSE_FILE := docker-compose.local.yml
+PROFILE_FLAGS := $(foreach p,$(PROFILES),--profile $(p))
+
+local-stack:
+	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) up -d --wait
+
+local-stack-down:
+	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) down
+
+local-stack-logs:
+	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) logs -f
+
+local-stack-rm:
+	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) rm
+
+local-stack-reset: local-stack-down local-stack-rm local-stack
+
+local-psql:
+	docker exec -ti {{cookiecutter.app_name}}-db-1 bash -c 'PGPASSWORD=postgres psql -U postgres -d {{cookiecutter.app_name}}_dev'

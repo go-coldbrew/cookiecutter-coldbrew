@@ -64,6 +64,8 @@ class TestProjectStructure:
             "main.go",
             "Makefile",
             "Dockerfile",
+            "docker-compose.local.yml",
+            "deploy/prometheus.yml",
             "go.mod",
             "README.md",
             "AGENTS.md",
@@ -277,6 +279,16 @@ class TestMakefileContent:
         assert "go tool mockery" in content
         assert "go tool govulncheck" in content
 
+    def test_local_stack_targets(self, bake_project):
+        project = bake_project()
+        content = (project / "Makefile").read_text()
+        assert "local-stack:" in content
+        assert "local-stack-down:" in content
+        assert "local-stack-logs:" in content
+        assert "local-stack-reset:" in content
+        assert "local-psql:" in content
+        assert "docker-compose.local.yml" in content
+
     def test_bench_run_pattern(self, bake_project):
         project = bake_project()
         content = (project / "Makefile").read_text()
@@ -344,6 +356,33 @@ class TestCIContent:
 # ---------------------------------------------------------------------------
 # Content tests — Config files
 # ---------------------------------------------------------------------------
+
+
+class TestDockerCompose:
+    def test_compose_service_name(self, bake_project):
+        project = bake_project()
+        content = (project / "docker-compose.local.yml").read_text()
+        assert "testservice:" in content
+        assert "9090:9090" in content
+        assert "9091:9091" in content
+
+    def test_compose_profiles(self, bake_project):
+        project = bake_project()
+        content = (project / "docker-compose.local.yml").read_text()
+        assert 'profiles: ["deps"]' in content
+        assert 'profiles: ["obs"]' in content
+
+    def test_compose_db_name(self, bake_project):
+        project = bake_project()
+        content = (project / "docker-compose.local.yml").read_text()
+        assert "POSTGRES_DB: testservice_dev" in content
+
+    def test_agents_md_local_stack(self, bake_project):
+        project = bake_project()
+        content = (project / "AGENTS.md").read_text()
+        assert "make local-stack" in content
+        assert "PROFILES=" in content
+        assert "localhost:9091" in content
 
 
 class TestConfigFiles:

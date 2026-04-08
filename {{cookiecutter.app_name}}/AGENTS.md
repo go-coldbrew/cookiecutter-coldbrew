@@ -103,6 +103,29 @@ GOPRIVATE is pre-configured in Makefile, Dockerfile, and CI workflows. For priva
 - **CI**: uncomment the auth steps in `.github/workflows/go.yml` or `.gitlab-ci.yml`
 - See [Private Modules guide](https://docs.coldbrew.cloud/howto/private-modules/) for details
 
+## Local Development Stack
+
+Start the service and dependencies with docker-compose:
+
+```bash
+make local-stack                        # service only
+make local-stack PROFILES="deps"        # + Postgres, Redis, Adminer
+make local-stack PROFILES="deps obs"    # + Prometheus, Grafana
+make local-stack-logs                   # follow logs
+make local-stack-down                   # stop stack
+make local-stack-reset                  # stop, remove, restart
+make local-psql                         # open Postgres shell
+```
+
+Endpoints when running with all profiles:
+- Service HTTP/Swagger: http://localhost:9091/swagger/
+- Service gRPC: localhost:9090
+- Postgres: localhost:5433 (user: postgres, password: postgres, db: {{cookiecutter.app_name}}_dev)
+- Redis: localhost:6379
+- Adminer (DB UI): http://localhost:8088
+- Prometheus: http://localhost:9100
+- Grafana: http://localhost:3000 (admin/admin)
+
 ## Rules
 
 - **Never edit generated files** — files in `proto/*.pb.go`, `proto/*_grpc.pb.go`, `proto/*.gw.go` are generated. Edit the `.proto` file and run `make generate`.

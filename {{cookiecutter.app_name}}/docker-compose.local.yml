@@ -1,0 +1,51 @@
+services:
+  {{cookiecutter.app_name}}:
+    build: .
+    restart: always
+    ports:
+      - "9090:9090"
+      - "9091:9091"
+    env_file:
+      - local.env
+
+  db:
+    image: postgres:17-alpine
+    restart: always
+    profiles: ["deps"]
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: {{cookiecutter.app_name}}_dev
+      POSTGRES_PASSWORD: postgres
+
+  redis:
+    image: redis:8-alpine
+    restart: always
+    profiles: ["deps"]
+    ports:
+      - "6379:6379"
+
+  adminer:
+    image: adminer
+    restart: always
+    profiles: ["deps"]
+    ports:
+      - "8088:8080"
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    profiles: ["obs"]
+    ports:
+      - "9100:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    profiles: ["obs"]
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
