@@ -31,30 +31,21 @@ The Makefile contains a number of useful commands to help you get started. Here 
 
 ## Local Development Stack
 
-Start infrastructure dependencies with docker-compose, then run the app natively:
+Start infrastructure with docker-compose, then run the app natively:
 
 ```console
-$ make local-stack PROFILES="deps"        # Start Postgres, Redis, Adminer
-$ make local-stack PROFILES="deps obs"    # + Prometheus, Grafana (with pre-built dashboard)
-$ make run                                # Run the app (fast native build)
+$ make local-stack                                # Start default services
+$ make local-stack PROFILES="postgres kafka obs"  # Override with specific services
+$ make run                                        # Run the app (fast native build)
 ```
 
-Infrastructure management:
+Available profiles: `postgres`, `mysql`, `cockroachdb`, `mongodb`, `redis`, `valkey`, `memcached`, `kafka`, `nats`, `elasticsearch`, `ministack`, `dynamodb`, `spanner`, `pubsub`, `bigtable`, `firestore`, `adminer`, `obs`
 
 ```console
-$ make local-stack-down PROFILES="deps"   # Stop infrastructure
-$ make local-stack-reset PROFILES="deps"  # Reset infrastructure
-$ make local-psql                         # Open Postgres shell
+$ make local-stack-down    # Stop infrastructure
+$ make local-stack-reset   # Reset infrastructure
+$ make local-psql          # Open Postgres shell
 ```
-
-Endpoints when running with all profiles:
-- **Swagger UI**: http://localhost:9091/swagger/
-- **Grafana**: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
-- **Jaeger**: http://localhost:16686 — distributed traces
-- **Prometheus**: http://localhost:9100
-- **Adminer**: http://localhost:8088
-- **Postgres**: localhost:5433
-- **Redis**: localhost:6379
 
 ## Docker
 

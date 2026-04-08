@@ -1,0 +1,21 @@
+// Grafana Alloy configuration for local development
+// Receives OTLP telemetry and forwards to Prometheus + Jaeger
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces  = [otelcol.exporter.otlp.jaeger.input]
+  }
+}
+
+otelcol.exporter.otlp "jaeger" {
+  client {
+    endpoint = "jaeger:4317"
+    tls {
+      insecure = true
+    }
+  }
+}

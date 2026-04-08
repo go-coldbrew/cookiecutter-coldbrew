@@ -1,28 +1,158 @@
 services:
-  db:
-    image: postgres:17-alpine
+  # --- Databases ---
+  postgres:
+    image: postgres:18-alpine
     restart: always
-    profiles: ["deps"]
+    profiles: ["postgres"]
     ports:
       - "5433:5432"
     environment:
       POSTGRES_DB: "{{cookiecutter.app_name}}_dev"
       POSTGRES_PASSWORD: "postgres"
 
+  mysql:
+    image: mysql:8
+    restart: always
+    profiles: ["mysql"]
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "{{cookiecutter.app_name}}_dev"
+
+  cockroachdb:
+    image: cockroachdb/cockroach:latest
+    restart: always
+    profiles: ["cockroachdb"]
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"
+      - "8081:8080"
+
+  mongodb:
+    image: mongo:7
+    restart: always
+    profiles: ["mongodb"]
+    ports:
+      - "27017:27017"
+
+  # --- Cache ---
   redis:
     image: redis:8-alpine
     restart: always
-    profiles: ["deps"]
+    profiles: ["redis"]
     ports:
       - "6379:6379"
 
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: always
+    profiles: ["valkey"]
+    ports:
+      - "6379:6379"
+
+  memcached:
+    image: memcached:alpine
+    restart: always
+    profiles: ["memcached"]
+    ports:
+      - "11211:11211"
+
+  # --- Messaging ---
+  kafka:
+    image: apache/kafka:latest
+    restart: always
+    profiles: ["kafka"]
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      CLUSTER_ID: "coldbrew-local-dev"
+
+  nats:
+    image: nats:alpine
+    restart: always
+    profiles: ["nats"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: --jetstream --http_port 8222
+
+  # --- Search ---
+  elasticsearch:
+    image: elasticsearch:8.17.0
+    restart: always
+    profiles: ["elasticsearch"]
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: "single-node"
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+  # --- AWS ---
+  ministack:
+    image: ministack/ministack:latest
+    restart: always
+    profiles: ["ministack"]
+    ports:
+      - "4566:4566"
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    restart: always
+    profiles: ["dynamodb"]
+    ports:
+      - "8000:8000"
+
+  # --- GCP ---
+  spanner:
+    image: gcr.io/cloud-spanner-emulator/emulator:latest
+    restart: always
+    profiles: ["spanner"]
+    ports:
+      - "9010:9010"
+      - "9020:9020"
+
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    restart: always
+    profiles: ["pubsub"]
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+    ports:
+      - "8085:8085"
+
+  bigtable:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    restart: always
+    profiles: ["bigtable"]
+    command: gcloud beta emulators bigtable start --host-port=0.0.0.0:8086
+    ports:
+      - "8086:8086"
+
+  firestore:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    restart: always
+    profiles: ["firestore"]
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+
+  # --- Tools ---
   adminer:
     image: adminer
     restart: always
-    profiles: ["deps"]
+    profiles: ["adminer"]
     ports:
       - "8088:8080"
 
+  # --- Observability ---
   prometheus:
     image: prom/prometheus:latest
     restart: always
@@ -53,3 +183,14 @@ services:
       - "4317:4317"
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: always
+    profiles: ["obs"]
+    ports:
+      - "12345:12345"
+      - "4318:4318"
+    volumes:
+      - ./deploy/local/alloy/config.alloy:/etc/alloy/config.alloy
+    command: run /etc/alloy/config.alloy

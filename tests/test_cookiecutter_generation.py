@@ -69,6 +69,7 @@ class TestProjectStructure:
             "deploy/local/grafana/provisioning/datasources/prometheus.yml",
             "deploy/local/grafana/provisioning/dashboards/dashboards.yml",
             "deploy/local/grafana/dashboards/coldbrew-service.json",
+            "deploy/local/alloy/config.alloy",
             "misc/loadtest/echo.json",
             "go.mod",
             "README.md",
@@ -387,20 +388,27 @@ class TestCIContent:
 
 
 class TestDockerCompose:
-    def test_compose_infra_services(self, bake_project):
+    def test_compose_per_service_profiles(self, bake_project):
         project = bake_project()
         content = (project / "docker-compose.local.yml").read_text()
-        assert "db:" in content
-        assert "redis:" in content
-        assert "prometheus:" in content
-        assert "grafana:" in content
-        assert "jaeger:" in content
-
-    def test_compose_profiles(self, bake_project):
-        project = bake_project()
-        content = (project / "docker-compose.local.yml").read_text()
-        assert 'profiles: ["deps"]' in content
+        for svc in ["postgres", "mysql", "redis", "kafka", "nats",
+                     "elasticsearch", "ministack", "dynamodb", "spanner",
+                     "prometheus", "grafana", "jaeger", "alloy"]:
+            assert svc + ":" in content, f"missing service: {svc}"
         assert 'profiles: ["obs"]' in content
+        assert 'profiles: ["postgres"]' in content
+        assert 'profiles: ["kafka"]' in content
+
+    def test_default_profiles_in_makefile(self, bake_project):
+        project = bake_project()
+        content = (project / "Makefile").read_text()
+        assert "PROFILES ?= postgres redis" in content
+
+    def test_custom_local_services(self, bake_project):
+        long_key = "local_services (postgres,mysql,cockroachdb,mongodb,redis,valkey,memcached,kafka,nats,elasticsearch,ministack,dynamodb,spanner,pubsub,bigtable,firestore,adminer)"
+        project = bake_project({long_key: "postgres,kafka,nats"})
+        content = (project / "Makefile").read_text()
+        assert "PROFILES ?= postgres kafka nats" in content
 
     def test_compose_db_name(self, bake_project):
         project = bake_project()

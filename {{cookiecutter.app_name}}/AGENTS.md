@@ -108,29 +108,35 @@ GOPRIVATE is pre-configured in Makefile, Dockerfile, and CI workflows. For priva
 Start infrastructure with docker-compose, then run the app locally with `make run`:
 
 ```bash
-# Start infrastructure
-make local-stack PROFILES="deps"        # Postgres, Redis, Adminer
-make local-stack PROFILES="deps obs"    # + Prometheus, Grafana (with pre-built dashboard)
-
-# Run the app (fast native build, no Docker)
-make run
-
-# Infrastructure management
-make local-stack-logs                   # follow infra logs
-make local-stack-down PROFILES="deps"   # stop infra
-make local-stack-reset PROFILES="deps"  # stop, remove, restart
-make local-psql                         # open Postgres shell
+make local-stack                               # start default services (selected during generation)
+make local-stack PROFILES="postgres kafka obs"  # override with specific services
+make run                                        # run the app (fast native build, no Docker)
+make local-stack-down                           # stop infra
+make local-psql                                 # open Postgres shell
 ```
 
-Endpoints:
-- Service HTTP/Swagger: http://localhost:9091/swagger/ (via `make run`)
-- Service gRPC: localhost:9090
-- Postgres: localhost:5433 (user: postgres, password: postgres, db: {{cookiecutter.app_name}}_dev)
-- Redis: localhost:6379
-- Adminer (DB UI): http://localhost:8088
-- Prometheus: http://localhost:9100
+Available profiles:
+
+| Category | Profiles |
+|----------|----------|
+| Databases | `postgres`, `mysql`, `cockroachdb`, `mongodb` |
+| Cache | `redis`, `valkey`, `memcached` |
+| Messaging | `kafka`, `nats` |
+| Search | `elasticsearch` |
+| AWS | `ministack`, `dynamodb` |
+| GCP | `spanner`, `pubsub`, `bigtable`, `firestore` |
+| Tools | `adminer` |
+| Observability | `obs` (Prometheus, Grafana, Jaeger, Alloy) |
+
+Service endpoints (via `make run`):
+- HTTP/Swagger: http://localhost:9091/swagger/
+- gRPC: localhost:9090
+
+Obs endpoints (when running with `obs` profile):
 - Grafana: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
-- Jaeger: http://localhost:16686 — distributed traces (OTLP on :4317)
+- Jaeger: http://localhost:16686 — distributed traces
+- Prometheus: http://localhost:9100
+- Alloy: http://localhost:12345 — OTEL collector UI
 
 ## Load Testing
 

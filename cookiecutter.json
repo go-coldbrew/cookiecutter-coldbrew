@@ -10,11 +10,13 @@
   "docker_build_image": "golang",
   "docker_build_image_version": ["1.26", "1.25"],
   "include_docker_compose": true,
+  "local_services (postgres,mysql,cockroachdb,mongodb,redis,valkey,memcached,kafka,nats,elasticsearch,ministack,dynamodb,spanner,pubsub,bigtable,firestore,adminer)": "postgres,redis",
   "_copy_without_render": [
     "third_party/OpenAPI/swagger-ui*",
     "third_party/*js.map",
     "third_party/*css.map",
     "third_party/*css",
-    "deploy/local/grafana/*"
+    "deploy/local/grafana/*",
+    "deploy/local/alloy/*"
   ]
 }
