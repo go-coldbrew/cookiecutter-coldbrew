@@ -83,6 +83,22 @@ def setup_local_env():
     if os.path.exists(example) and not os.path.exists(local):
         shutil.copy2(example, local)
 
-init_proto()
+def remove_docker_compose():
+    """
+    Removes docker-compose and deploy files when include_docker_compose is false
+    """
+    import shutil
+    remove_file("docker-compose.local.yml")
+    deploy_dir = os.path.join(PROJECT_DIRECTORY, "deploy")
+    if os.path.exists(deploy_dir):
+        shutil.rmtree(deploy_dir)
+
+if os.environ.get("COOKIECUTTER_SKIP_PROTO_INIT") != "1":
+    init_proto()
+
 setup_local_env()
+
+if "{{ cookiecutter.include_docker_compose }}".lower() not in ("true", "1", "yes"):
+    remove_docker_compose()
+
 init_git()

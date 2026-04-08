@@ -39,7 +39,7 @@ services:
     ports:
       - "9100:9090"
     volumes:
-      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./deploy/local/prometheus.yml:/etc/prometheus/prometheus.yml
 
   grafana:
     image: grafana/grafana:latest
@@ -49,3 +49,6 @@ services:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./deploy/local/grafana/provisioning:/etc/grafana/provisioning
+      - ./deploy/local/grafana/dashboards:/var/lib/grafana/dashboards

@@ -65,7 +65,10 @@ class TestProjectStructure:
             "Makefile",
             "Dockerfile",
             "docker-compose.local.yml",
-            "deploy/prometheus.yml",
+            "deploy/local/prometheus.yml",
+            "deploy/local/grafana/provisioning/datasources/prometheus.yml",
+            "deploy/local/grafana/provisioning/dashboards/dashboards.yml",
+            "deploy/local/grafana/dashboards/coldbrew-service.json",
             "go.mod",
             "README.md",
             "AGENTS.md",
@@ -383,6 +386,23 @@ class TestDockerCompose:
         assert "make local-stack" in content
         assert "PROFILES=" in content
         assert "localhost:9091" in content
+
+    def test_grafana_provisioning_exists(self, bake_project):
+        project = bake_project()
+        assert (project / "deploy/local/grafana/provisioning/datasources/prometheus.yml").exists()
+        assert (project / "deploy/local/grafana/provisioning/dashboards/dashboards.yml").exists()
+        assert (project / "deploy/local/grafana/dashboards/coldbrew-service.json").exists()
+
+    def test_grafana_volumes_in_compose(self, bake_project):
+        project = bake_project()
+        content = (project / "docker-compose.local.yml").read_text()
+        assert "deploy/local/grafana/provisioning:/etc/grafana/provisioning" in content
+        assert "deploy/local/grafana/dashboards:/var/lib/grafana/dashboards" in content
+
+    def test_docker_compose_disabled(self, bake_project):
+        project = bake_project({"include_docker_compose": "false"}, with_hooks=True)
+        assert not (project / "docker-compose.local.yml").exists()
+        assert not (project / "deploy").exists()
 
 
 class TestConfigFiles:
