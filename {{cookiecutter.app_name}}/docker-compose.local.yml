@@ -43,3 +43,13 @@ services:
     volumes:
       - ./deploy/local/grafana/provisioning:/etc/grafana/provisioning
       - ./deploy/local/grafana/dashboards:/var/lib/grafana/dashboards
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    restart: always
+    profiles: ["obs"]
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"

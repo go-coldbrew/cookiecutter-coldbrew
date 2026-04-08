@@ -394,6 +394,7 @@ class TestDockerCompose:
         assert "redis:" in content
         assert "prometheus:" in content
         assert "grafana:" in content
+        assert "jaeger:" in content
 
     def test_compose_profiles(self, bake_project):
         project = bake_project()

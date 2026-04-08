@@ -130,6 +130,7 @@ Endpoints:
 - Adminer (DB UI): http://localhost:8088
 - Prometheus: http://localhost:9100
 - Grafana: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
+- Jaeger: http://localhost:16686 — distributed traces (OTLP on :4317)
 
 ## Load Testing
 

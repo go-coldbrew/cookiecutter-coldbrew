@@ -126,6 +126,7 @@ local-stack:
 	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port adminer 8080 2>/dev/null | sed 's|.*:\(.*\)|  Adminer:     http://localhost:\1|' || true
 	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port prometheus 9090 2>/dev/null | sed 's|.*:\(.*\)|  Prometheus:  http://localhost:\1|' || true
 	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port grafana 3000 2>/dev/null | sed 's|.*:\(.*\)|  Grafana:     http://localhost:\1  (admin/admin)|' || true
+	@docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) port jaeger 16686 2>/dev/null | sed 's|.*:\(.*\)|  Jaeger:      http://localhost:\1|' || true
 	@echo
 
 local-stack-down:

@@ -50,6 +50,7 @@ $ make local-psql                         # Open Postgres shell
 Endpoints when running with all profiles:
 - **Swagger UI**: http://localhost:9091/swagger/
 - **Grafana**: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
+- **Jaeger**: http://localhost:16686 — distributed traces
 - **Prometheus**: http://localhost:9100
 - **Adminer**: http://localhost:8088
 - **Postgres**: localhost:5433
