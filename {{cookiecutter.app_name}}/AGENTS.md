@@ -112,7 +112,8 @@ make local-stack                               # start default services (selecte
 make local-stack PROFILES="postgres kafka obs"  # override with specific services
 make run                                        # run the app (fast native build, no Docker)
 make local-stack-down                           # stop infra
-make local-psql                                 # open Postgres shell
+make local-exec SVC=postgres CMD="psql -U postgres"  # exec into a service
+make local-exec SVC=redis CMD="redis-cli"            # works with any service
 ```
 
 Available profiles:
@@ -124,9 +125,9 @@ Available profiles:
 | Messaging | `kafka`, `nats` |
 | Search | `elasticsearch` |
 | AWS | `ministack`, `dynamodb` |
-| GCP | `spanner`, `pubsub`, `bigtable`, `firestore` |
+| GCP | `spanner`, `pubsub`, `bigtable`, `firestore`, `alloydb` |
 | Tools | `adminer` |
-| Observability | `obs` (Prometheus, Grafana, Jaeger, Alloy) |
+| Observability | `obs` (Prometheus, Grafana, Jaeger) |
 
 Service endpoints (via `make run`):
 - HTTP/Swagger: http://localhost:9091/swagger/
@@ -136,7 +137,6 @@ Obs endpoints (when running with `obs` profile):
 - Grafana: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
 - Jaeger: http://localhost:16686 — distributed traces
 - Prometheus: http://localhost:9100
-- Alloy: http://localhost:12345 — OTEL collector UI
 
 ## Load Testing
 

@@ -22,12 +22,6 @@ var (
 		Help:      "Duration of Echo RPC calls in seconds.",
 		Buckets:   []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5},
 	}, []string{"outcome"})
-
-	activeRequests = promauto.NewGauge(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Name:      "active_requests",
-		Help:      "Number of currently active requests.",
-	})
 )
 
 type appMetrics struct{}
@@ -43,8 +37,4 @@ func (m *appMetrics) IncEchoTotal(outcome string) {
 
 func (m *appMetrics) ObserveEchoDuration(outcome string, duration time.Duration) {
 	echoDuration.WithLabelValues(outcome).Observe(duration.Seconds())
-}
-
-func (m *appMetrics) SetActiveRequests(count int) {
-	activeRequests.Set(float64(count))
 }

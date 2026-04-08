@@ -5,7 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
+	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/metrics"
+	mockmetrics "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/misc/mocks/metrics"
 	proto "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
 )
 
@@ -47,12 +50,15 @@ func TestEcho(t *testing.T) {
 	const prefix = "testPrefix"
 	const msg = "hello"
 
-	s, err := New(config.Get())
-	assert.NoError(t, err)
-	assert.NotNil(t, s)
+	m := mockmetrics.NewMetrics(t)
+	m.EXPECT().IncEchoTotal(metrics.OutcomeSuccess).Once()
+	m.EXPECT().ObserveEchoDuration(metrics.OutcomeSuccess, mock.AnythingOfType("time.Duration")).Once()
 
-	// override the prefix
-	s.prefix = prefix
+	s := &svc{
+		Server:     GetHealthCheckServer(),
+		monitoring: m,
+		prefix:     prefix,
+	}
 
 	resp, err := s.Echo(context.Background(), &proto.EchoRequest{Msg: msg})
 	assert.NoError(t, err)

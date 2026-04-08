@@ -44,7 +44,7 @@ Available profiles: `postgres`, `mysql`, `cockroachdb`, `mongodb`, `redis`, `val
 ```console
 $ make local-stack-down    # Stop infrastructure
 $ make local-stack-reset   # Reset infrastructure
-$ make local-psql          # Open Postgres shell
+$ make local-exec SVC=postgres CMD="psql -U postgres"  # Exec into any service
 ```
 
 ## Docker

@@ -36,6 +36,8 @@ def init_git():
         git.wait()
 
 def init_proto():
+    # Order matters: download → generate (needs buf plugins) → mock (needs generated
+    # interfaces) → tidy (needs all imports including generated mocks to resolve)
     print("Starting proto initialization...")
     print("Step 1/4: Fetching Go modules (this might take a few minutes)...")
     code = Popen(["go", "mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
@@ -49,16 +51,16 @@ def init_proto():
         print("Error: 'make generate' failed.")
         sys.exit(code)
 
-    print("Step 3/4: Tidying Go modules...")
-    code = Popen(["go", "mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
-    if code != 0:
-        print("Error: 'go mod tidy' failed.")
-        sys.exit(code)
-
-    print("Step 4/4: Running 'make mock'...")
+    print("Step 3/4: Running 'make mock'...")
     code = Popen(["make", "mock"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'make mock' failed.")
+        sys.exit(code)
+
+    print("Step 4/4: Tidying Go modules...")
+    code = Popen(["go", "mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
+    if code != 0:
+        print("Error: 'go mod tidy' failed.")
         sys.exit(code)
 
     print("Proto initialization completed successfully.")

@@ -49,7 +49,7 @@ services:
     restart: always
     profiles: ["valkey"]
     ports:
-      - "6379:6379"
+      - "6380:6379"
 
   memcached:
     image: memcached:alpine
@@ -144,6 +144,16 @@ services:
     ports:
       - "8080:8080"
 
+  alloydb:
+    image: google/alloydbomni:latest
+    restart: always
+    profiles: ["alloydb"]
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "{{cookiecutter.app_name}}_dev"
+
   # --- Tools ---
   adminer:
     image: adminer
@@ -183,14 +193,3 @@ services:
       - "4317:4317"
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
-
-  alloy:
-    image: grafana/alloy:latest
-    restart: always
-    profiles: ["obs"]
-    ports:
-      - "12345:12345"
-      - "4318:4318"
-    volumes:
-      - ./deploy/local/alloy/config.alloy:/etc/alloy/config.alloy
-    command: run /etc/alloy/config.alloy

@@ -69,7 +69,6 @@ class TestProjectStructure:
             "deploy/local/grafana/provisioning/datasources/prometheus.yml",
             "deploy/local/grafana/provisioning/dashboards/dashboards.yml",
             "deploy/local/grafana/dashboards/coldbrew-service.json",
-            "deploy/local/alloy/config.alloy",
             "misc/loadtest/echo.json",
             "go.mod",
             "README.md",
@@ -202,6 +201,13 @@ class TestGoFileContent:
         assert "metrics.New()" in content
         assert "monitoring metrics.Metrics" in content
 
+    def test_service_test_uses_mock_metrics(self, bake_project):
+        project = bake_project()
+        content = (project / "service/service_test.go").read_text()
+        assert "mockmetrics" in content
+        assert "mock.AnythingOfType" in content
+        assert "EXPECT().IncEchoTotal" in content
+
     def test_version_app_name(self, bake_project):
         project = bake_project()
         content = (project / "version/version.go").read_text()
@@ -315,7 +321,7 @@ class TestMakefileContent:
         assert "local-stack-down:" in content
         assert "local-stack-logs:" in content
         assert "local-stack-reset:" in content
-        assert "local-psql:" in content
+        assert "local-exec:" in content
         assert "docker-compose.local.yml" in content
 
     def test_bench_run_pattern(self, bake_project):
@@ -393,7 +399,7 @@ class TestDockerCompose:
         content = (project / "docker-compose.local.yml").read_text()
         for svc in ["postgres", "mysql", "redis", "kafka", "nats",
                      "elasticsearch", "ministack", "dynamodb", "spanner",
-                     "prometheus", "grafana", "jaeger", "alloy"]:
+                     "alloydb", "prometheus", "grafana", "jaeger"]:
             assert svc + ":" in content, f"missing service: {svc}"
         assert 'profiles: ["obs"]' in content
         assert 'profiles: ["postgres"]' in content
@@ -405,7 +411,7 @@ class TestDockerCompose:
         assert "PROFILES ?= postgres redis" in content
 
     def test_custom_local_services(self, bake_project):
-        long_key = "local_services (postgres,mysql,cockroachdb,mongodb,redis,valkey,memcached,kafka,nats,elasticsearch,ministack,dynamodb,spanner,pubsub,bigtable,firestore,adminer)"
+        long_key = "local_services (postgres,mysql,cockroachdb,mongodb,redis,valkey,memcached,kafka,nats,elasticsearch,ministack,dynamodb,spanner,pubsub,bigtable,firestore,alloydb,adminer)"
         project = bake_project({long_key: "postgres,kafka,nats"})
         content = (project / "Makefile").read_text()
         assert "PROFILES ?= postgres kafka nats" in content

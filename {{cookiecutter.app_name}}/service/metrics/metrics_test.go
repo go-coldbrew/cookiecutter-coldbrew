@@ -45,17 +45,3 @@ func TestObserveEchoDuration(t *testing.T) {
 		t.Fatal("expected at least one observation")
 	}
 }
-
-func TestSetActiveRequests(t *testing.T) {
-	m := New()
-	m.SetActiveRequests(5)
-
-	mf := gatherMetric(namespace + "_active_requests")
-	if mf == nil {
-		t.Fatal("metric not found")
-	}
-	val := mf.GetMetric()[0].GetGauge().GetValue()
-	if val != 5 {
-		t.Fatalf("expected 5, got %f", val)
-	}
-}
