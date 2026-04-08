@@ -117,7 +117,7 @@ COMPOSE_FILE := docker-compose.local.yml
 PROFILE_FLAGS := $(foreach p,$(PROFILES),--profile $(p))
 
 local-stack:
-	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) up -d --wait
+	docker-compose -f $(COMPOSE_FILE) $(PROFILE_FLAGS) up -d --wait --remove-orphans
 	@echo
 	@echo "Local stack is running. Run 'make run' to start the app."
 	@echo "Endpoints:"

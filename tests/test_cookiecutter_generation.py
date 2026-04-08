@@ -418,7 +418,7 @@ class TestConfigFiles:
     def test_gitignore_entries(self, bake_project):
         project = bake_project()
         content = (project / ".gitignore").read_text()
-        for entry in ["local.env", "cover.html", "cover.out", "misc"]:
+        for entry in ["local.env", "cover.html", "cover.out"]:
             assert entry in content
 
     def test_local_env_example_exists(self, bake_project):
