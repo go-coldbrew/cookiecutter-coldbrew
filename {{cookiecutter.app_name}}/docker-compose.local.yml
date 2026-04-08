@@ -118,7 +118,7 @@ services:
 
   # --- AWS ---
   ministack:
-    image: ministack/ministack:latest
+    image: nahuelnucera/ministack:latest
     restart: always
     profiles: ["ministack"]
     ports:

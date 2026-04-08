@@ -111,7 +111,7 @@ run-docker: build-docker
 # Local development stack (docker-compose)
 # Available profiles: postgres, mysql, cockroachdb, mongodb, redis, valkey,
 #   memcached, kafka, nats, elasticsearch, ministack, dynamodb, spanner,
-#   pubsub, bigtable, firestore, adminer, obs
+#   pubsub, bigtable, firestore, alloydb, adminer, obs
 # Usage:
 #   make local-stack                              # start selected services
 #   make local-stack PROFILES="postgres kafka obs" # override profiles

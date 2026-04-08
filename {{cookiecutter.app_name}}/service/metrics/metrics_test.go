@@ -8,8 +8,12 @@ import (
 	dto "github.com/prometheus/client_model/go"
 )
 
-func gatherMetric(name string) *dto.MetricFamily {
-	families, _ := prometheus.DefaultGatherer.Gather()
+func gatherMetric(t *testing.T, name string) *dto.MetricFamily {
+	t.Helper()
+	families, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		t.Fatalf("failed to gather metrics: %v", err)
+	}
 	for _, f := range families {
 		if f.GetName() == name {
 			return f
@@ -23,7 +27,7 @@ func TestIncEchoTotal(t *testing.T) {
 	m.IncEchoTotal(OutcomeSuccess)
 	m.IncEchoTotal(OutcomeError)
 
-	mf := gatherMetric(namespace + "_echo_total")
+	mf := gatherMetric(t, namespace+"_echo_total")
 	if mf == nil {
 		t.Fatal("metric not found")
 	}
@@ -36,7 +40,7 @@ func TestObserveEchoDuration(t *testing.T) {
 	m := New()
 	m.ObserveEchoDuration(OutcomeSuccess, 50*time.Millisecond)
 
-	mf := gatherMetric(namespace + "_echo_duration_seconds")
+	mf := gatherMetric(t, namespace+"_echo_duration_seconds")
 	if mf == nil {
 		t.Fatal("metric not found")
 	}
