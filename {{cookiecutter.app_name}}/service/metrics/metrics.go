@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-const namespace = "{{cookiecutter.app_name}}"
+const namespace = "{{ cookiecutter.app_name | replace('-', '_') | replace('.', '_') }}"
 
 var (
 	echoTotal = promauto.NewCounterVec(prometheus.CounterOpts{
