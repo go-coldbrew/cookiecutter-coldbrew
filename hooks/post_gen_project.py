@@ -36,6 +36,8 @@ def init_git():
         git.wait()
 
 def init_proto():
+    # Order matters: download → generate (needs buf plugins) → mock (needs generated
+    # interfaces) → tidy (needs all imports including generated mocks to resolve)
     print("Starting proto initialization...")
     print("Step 1/4: Fetching Go modules (this might take a few minutes)...")
     code = Popen(["go", "mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
@@ -49,16 +51,16 @@ def init_proto():
         print("Error: 'make generate' failed.")
         sys.exit(code)
 
-    print("Step 3/4: Tidying Go modules...")
-    code = Popen(["go", "mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
-    if code != 0:
-        print("Error: 'go mod tidy' failed.")
-        sys.exit(code)
-
-    print("Step 4/4: Running 'make mock'...")
+    print("Step 3/4: Running 'make mock'...")
     code = Popen(["make", "mock"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'make mock' failed.")
+        sys.exit(code)
+
+    print("Step 4/4: Tidying Go modules...")
+    code = Popen(["go", "mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
+    if code != 0:
+        print("Error: 'go mod tidy' failed.")
         sys.exit(code)
 
     print("Proto initialization completed successfully.")
@@ -83,6 +85,25 @@ def setup_local_env():
     if os.path.exists(example) and not os.path.exists(local):
         shutil.copy2(example, local)
 
-init_proto()
+def remove_docker_compose():
+    """
+    Removes docker-compose and deploy files when include_docker_compose is false
+    """
+    import shutil
+    remove_file("docker-compose.local.yml")
+    deploy_dir = os.path.join(PROJECT_DIRECTORY, "deploy")
+    if os.path.exists(deploy_dir):
+        shutil.rmtree(deploy_dir)
+
+if os.environ.get("COOKIECUTTER_SKIP_PROTO_INIT") == "1":
+    print("WARNING: COOKIECUTTER_SKIP_PROTO_INIT=1 — skipping proto initialization.")
+    print("  Run 'make generate && make mock && go mod tidy' manually before building.")
+else:
+    init_proto()
+
 setup_local_env()
+
+if "{{ cookiecutter.include_docker_compose }}".lower() not in ("true", "1", "yes"):
+    remove_docker_compose()
+
 init_git()

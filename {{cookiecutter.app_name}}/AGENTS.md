@@ -103,6 +103,54 @@ GOPRIVATE is pre-configured in Makefile, Dockerfile, and CI workflows. For priva
 - **CI**: uncomment the auth steps in `.github/workflows/go.yml` or `.gitlab-ci.yml`
 - See [Private Modules guide](https://docs.coldbrew.cloud/howto/private-modules/) for details
 
+## Local Development Stack
+
+Start infrastructure with docker-compose, then run the app locally with `make run`:
+
+```bash
+make local-stack                               # start default services (selected during generation)
+make local-stack PROFILES="postgres kafka obs"  # override with specific services
+make run                                        # run the app (fast native build, no Docker)
+make local-stack-down                           # stop infra
+make local-exec SVC=postgres CMD="psql -U postgres"  # exec into a service
+make local-exec SVC=redis CMD="redis-cli"            # works with any service
+```
+
+Available profiles:
+
+| Category | Profiles |
+|----------|----------|
+| Databases | `postgres`, `mysql`, `cockroachdb`, `mongodb` |
+| Cache | `redis`, `valkey`, `memcached` |
+| Messaging | `kafka`, `nats` |
+| Search | `elasticsearch` |
+| AWS | `ministack`, `dynamodb` |
+| GCP | `spanner`, `pubsub`, `bigtable`, `firestore`, `alloydb` |
+| Tools | `adminer` |
+| Observability | `obs` (Prometheus, Grafana, Jaeger) |
+
+Service endpoints (via `make run`):
+- HTTP/Swagger: http://localhost:9091/swagger/
+- gRPC: localhost:9090
+
+Obs endpoints (when running with `obs` profile):
+- Grafana: http://localhost:3000 (admin/admin) — ColdBrew dashboard pre-loaded
+- Jaeger: http://localhost:16686 — distributed traces
+- Prometheus: http://localhost:9100
+
+## Load Testing
+
+Run gRPC load tests against a locally running service using [ghz](https://ghz.sh):
+
+```bash
+make run                    # start the app in one terminal
+make loadtest               # run load test in another terminal
+```
+
+The default config (`misc/loadtest/echo.json`) sends requests for 10 seconds at concurrency 10 to the Echo RPC via gRPC reflection. Edit the file to adjust duration, concurrency, or target a different RPC.
+
+With the observability stack running (`make local-stack-obs`), load test results are visible in the Grafana dashboard in real-time.
+
 ## Rules
 
 - **Never edit generated files** — files in `proto/*.pb.go`, `proto/*_grpc.pb.go`, `proto/*.gw.go` are generated. Edit the `.proto` file and run `make generate`.

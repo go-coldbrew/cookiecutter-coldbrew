@@ -25,8 +25,27 @@ The Makefile contains a number of useful commands to help you get started. Here 
 - `make lint` - Runs the linter
 - `make run` - Runs the application
 - `make runj` - Runs the application with json logs parsing with jq
+- `make loadtest` - Runs gRPC load test ([ghz](https://ghz.sh)) against the running service
 - `make build` - Builds the application
 - `make generate` - Generates the code
+
+## Local Development Stack
+
+Start infrastructure with docker-compose, then run the app natively:
+
+```console
+$ make local-stack                                # Start default services
+$ make local-stack PROFILES="postgres kafka obs"  # Override with specific services
+$ make run                                        # Run the app (fast native build)
+```
+
+Available profiles: `postgres`, `mysql`, `cockroachdb`, `mongodb`, `redis`, `valkey`, `memcached`, `kafka`, `nats`, `elasticsearch`, `ministack`, `dynamodb`, `spanner`, `pubsub`, `bigtable`, `firestore`, `alloydb`, `adminer`, `obs`
+
+```console
+$ make local-stack-down    # Stop infrastructure
+$ make local-stack-reset   # Reset infrastructure
+$ make local-exec SVC=postgres CMD="psql -U postgres"  # Exec into any service
+```
 
 ## Docker
 

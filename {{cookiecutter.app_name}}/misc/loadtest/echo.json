@@ -1,0 +1,11 @@
+{
+  "call": "{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}/Echo",
+  "host": "localhost:9090",
+  "insecure": true,
+  "reflect": true,
+  "data": {
+    "msg": "hello"
+  },
+  "duration": "10s",
+  "concurrency": 10
+}

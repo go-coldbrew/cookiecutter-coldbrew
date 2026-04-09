@@ -29,12 +29,15 @@ def default_context():
 
 @pytest.fixture
 def bake_project(tmp_path, template_dir, default_context):
-    """Factory fixture that bakes a project without running hooks.
+    """Factory fixture that bakes a project.
 
     Returns a function that accepts optional context overrides and
     returns a pathlib.Path to the generated project directory.
+
+    Pass with_hooks=True to enable post-generation hooks (skips proto init
+    via COOKIECUTTER_SKIP_PROTO_INIT=1 to keep tests fast).
     """
-    def _bake(extra_context=None, full_context=None):
+    def _bake(extra_context=None, full_context=None, with_hooks=False):
         if full_context is not None:
             ctx = full_context
         else:
@@ -42,13 +45,26 @@ def bake_project(tmp_path, template_dir, default_context):
             if extra_context:
                 ctx.update(extra_context)
 
-        project_dir = cookiecutter(
-            template_dir,
-            output_dir=str(tmp_path),
-            no_input=True,
-            extra_context=ctx,
-            accept_hooks=False,
-        )
+        import os
+        old_env = os.environ.get("COOKIECUTTER_SKIP_PROTO_INIT")
+        if with_hooks:
+            os.environ["COOKIECUTTER_SKIP_PROTO_INIT"] = "1"
+
+        try:
+            project_dir = cookiecutter(
+                template_dir,
+                output_dir=str(tmp_path),
+                no_input=True,
+                extra_context=ctx,
+                accept_hooks=with_hooks,
+            )
+        finally:
+            if with_hooks:
+                if old_env is None:
+                    os.environ.pop("COOKIECUTTER_SKIP_PROTO_INIT", None)
+                else:
+                    os.environ["COOKIECUTTER_SKIP_PROTO_INIT"] = old_env
+
         return Path(project_dir)
 
     return _bake

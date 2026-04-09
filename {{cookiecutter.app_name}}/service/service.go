@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
 	proto "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
+	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/metrics"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	"github.com/go-coldbrew/errors"
@@ -20,6 +22,8 @@ var _ proto.{{cookiecutter.service_name}}Server = (*svc)(nil)
 type svc struct {
 	// health server for the service
 	*health.Server
+	// application metrics
+	monitoring metrics.Metrics
 	// TODO: remove this, since this is just to demonstrate how to use config
 	// prefix to be added to the message in the response
 	prefix string
@@ -39,7 +43,16 @@ func (s *svc) HealthCheck(ctx context.Context, _ *emptypb.Empty) (*httpbody.Http
 
 // Echo returns the message with the prefix added
 // TODO: remove this, since this is just to demonstrate how to use endpoints and config
-func (s *svc) Echo(_ context.Context, req *proto.EchoRequest) (*proto.EchoResponse, error) {
+func (s *svc) Echo(_ context.Context, req *proto.EchoRequest) (resp *proto.EchoResponse, err error) {
+	start := time.Now()
+	outcome := metrics.OutcomeSuccess
+	defer func() {
+		if err != nil {
+			outcome = metrics.OutcomeError
+		}
+		s.monitoring.IncEchoTotal(outcome)
+		s.monitoring.ObserveEchoDuration(outcome, time.Since(start))
+	}()
 	return &proto.EchoResponse{
 		Msg: fmt.Sprintf("%s: %s", s.prefix, req.GetMsg()),
 	}, nil
@@ -63,6 +76,8 @@ func New(cfg config.Config) (*svc, error) {
 	s := &svc{
 		// This is the health server for the service that is used for grpc
 		Server: GetHealthCheckServer(),
+		// application metrics
+		monitoring: metrics.New(),
 		// TODO: remove this, since this is just to demonstrate how to use config
 		prefix: cfg.Prefix,
 	}

@@ -64,6 +64,12 @@ class TestProjectStructure:
             "main.go",
             "Makefile",
             "Dockerfile",
+            "docker-compose.local.yml",
+            "deploy/local/prometheus.yml",
+            "deploy/local/grafana/provisioning/datasources/prometheus.yml",
+            "deploy/local/grafana/provisioning/dashboards/dashboards.yml",
+            "deploy/local/grafana/dashboards/coldbrew-service.json",
+            "misc/loadtest/echo.json",
             "go.mod",
             "README.md",
             "AGENTS.md",
@@ -81,6 +87,10 @@ class TestProjectStructure:
             "service/healthcheck.go",
             "service/service_test.go",
             "service/healthcheck_test.go",
+            "service/metrics/types.go",
+            "service/metrics/metrics.go",
+            "service/metrics/labels.go",
+            "service/metrics/metrics_test.go",
             "version/version.go",
             ".github/workflows/go.yml",
             ".gitlab-ci.yml",
@@ -170,6 +180,33 @@ class TestGoFileContent:
         content = (project / "service/service.go").read_text()
         assert "func (s *svc) Stop()" in content
         assert "func (s*svc)" not in content
+
+    def test_metrics_interface(self, bake_project):
+        project = bake_project()
+        content = (project / "service/metrics/types.go").read_text()
+        assert "type Metrics interface" in content
+        assert "IncEchoTotal" in content
+        assert "ObserveEchoDuration" in content
+
+    def test_metrics_uses_promauto(self, bake_project):
+        project = bake_project()
+        content = (project / "service/metrics/metrics.go").read_text()
+        assert "promauto" in content
+        assert "_duration_seconds" in content
+        assert '_namespace = "testservice"' in content or 'namespace = "testservice"' in content
+
+    def test_service_wires_metrics(self, bake_project):
+        project = bake_project()
+        content = (project / "service/service.go").read_text()
+        assert "metrics.New()" in content
+        assert "monitoring metrics.Metrics" in content
+
+    def test_service_test_uses_mock_metrics(self, bake_project):
+        project = bake_project()
+        content = (project / "service/service_test.go").read_text()
+        assert "mockmetrics" in content
+        assert "mock.AnythingOfType" in content
+        assert "EXPECT().IncEchoTotal" in content
 
     def test_version_app_name(self, bake_project):
         project = bake_project()
@@ -277,6 +314,16 @@ class TestMakefileContent:
         assert "go tool mockery" in content
         assert "go tool govulncheck" in content
 
+    def test_local_stack_targets(self, bake_project):
+        project = bake_project()
+        content = (project / "Makefile").read_text()
+        assert "local-stack:" in content
+        assert "local-stack-down:" in content
+        assert "local-stack-logs:" in content
+        assert "local-stack-reset:" in content
+        assert "local-exec:" in content
+        assert "docker-compose.local.yml" in content
+
     def test_bench_run_pattern(self, bake_project):
         project = bake_project()
         content = (project / "Makefile").read_text()
@@ -346,11 +393,71 @@ class TestCIContent:
 # ---------------------------------------------------------------------------
 
 
+class TestDockerCompose:
+    def test_compose_per_service_profiles(self, bake_project):
+        project = bake_project()
+        content = (project / "docker-compose.local.yml").read_text()
+        for svc in ["postgres", "mysql", "redis", "kafka", "nats",
+                     "elasticsearch", "ministack", "dynamodb", "spanner",
+                     "alloydb", "prometheus", "grafana", "jaeger"]:
+            assert svc + ":" in content, f"missing service: {svc}"
+        assert 'profiles: ["obs"]' in content
+        assert 'profiles: ["postgres"]' in content
+        assert 'profiles: ["kafka"]' in content
+
+    def test_default_profiles_in_makefile(self, bake_project):
+        project = bake_project()
+        content = (project / "Makefile").read_text()
+        assert "PROFILES ?= postgres redis" in content
+
+    def test_custom_local_services(self, bake_project):
+        long_key = "local_services (postgres,mysql,cockroachdb,mongodb,redis,valkey,memcached,kafka,nats,elasticsearch,ministack,dynamodb,spanner,pubsub,bigtable,firestore,alloydb,adminer)"
+        project = bake_project({long_key: "postgres,kafka,nats"})
+        content = (project / "Makefile").read_text()
+        assert "PROFILES ?= postgres kafka nats" in content
+
+    def test_compose_db_name(self, bake_project):
+        project = bake_project()
+        content = (project / "docker-compose.local.yml").read_text()
+        assert "testservice_dev" in content
+
+    def test_agents_md_local_stack(self, bake_project):
+        project = bake_project()
+        content = (project / "AGENTS.md").read_text()
+        assert "make local-stack" in content
+        assert "PROFILES=" in content
+        assert "localhost:9091" in content
+
+    def test_grafana_provisioning_exists(self, bake_project):
+        project = bake_project()
+        assert (project / "deploy/local/grafana/provisioning/datasources/prometheus.yml").exists()
+        assert (project / "deploy/local/grafana/provisioning/dashboards/dashboards.yml").exists()
+        assert (project / "deploy/local/grafana/dashboards/coldbrew-service.json").exists()
+
+    def test_grafana_volumes_in_compose(self, bake_project):
+        project = bake_project()
+        content = (project / "docker-compose.local.yml").read_text()
+        assert "deploy/local/grafana/provisioning:/etc/grafana/provisioning" in content
+        assert "deploy/local/grafana/dashboards:/var/lib/grafana/dashboards" in content
+
+    def test_loadtest_config(self, bake_project):
+        project = bake_project()
+        content = (project / "misc/loadtest/echo.json").read_text()
+        assert "com.github.testorg.TestSvc/Echo" in content
+        assert '"reflect": true' in content
+        assert "localhost:9090" in content
+
+    def test_docker_compose_disabled(self, bake_project):
+        project = bake_project({"include_docker_compose": "false"}, with_hooks=True)
+        assert not (project / "docker-compose.local.yml").exists()
+        assert not (project / "deploy").exists()
+
+
 class TestConfigFiles:
     def test_gitignore_entries(self, bake_project):
         project = bake_project()
         content = (project / ".gitignore").read_text()
-        for entry in ["local.env", "cover.html", "cover.out", "misc"]:
+        for entry in ["local.env", "cover.html", "cover.out"]:
             assert entry in content
 
     def test_local_env_example_exists(self, bake_project):

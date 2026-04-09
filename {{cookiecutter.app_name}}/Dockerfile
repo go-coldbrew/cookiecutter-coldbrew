@@ -1,7 +1,7 @@
 # Build Stage
 FROM {{cookiecutter.docker_build_image}}:{{cookiecutter.docker_build_image_version}} AS build-stage
 
-LABEL app="build-{{cookiecutter.app_name}}"
+LABEL app="{{cookiecutter.app_name}}"
 LABEL REPO="https://{{cookiecutter.source_path}}/{{cookiecutter.app_name}}"
 
 ARG GOPRIVATE={{cookiecutter.goprivate}}
