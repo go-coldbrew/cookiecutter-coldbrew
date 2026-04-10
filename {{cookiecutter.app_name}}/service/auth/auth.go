@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/go-coldbrew/interceptors"
+	"github.com/go-coldbrew/log"
 	"github.com/golang-jwt/jwt/v5"
 	grpcauth "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"google.golang.org/grpc"
@@ -131,12 +132,16 @@ func JWTAuthFunc(secret string) grpcauth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		tokenStr, err := grpcauth.AuthFromMD(ctx, "bearer")
 		if err != nil {
+			method, _ := grpc.Method(ctx)
+			log.Warn(ctx, "msg", "jwt auth failed: missing or malformed authorization header", "method", method, "error", err)
 			return nil, err
 		}
 
 		claims := &Claims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, keyFunc, validMethods)
 		if err != nil || !token.Valid {
+			method, _ := grpc.Method(ctx)
+			log.Warn(ctx, "msg", "jwt auth failed: invalid token", "method", method, "error", err)
 			return nil, status.Error(codes.Unauthenticated, "invalid token")
 		}
 
@@ -158,13 +163,19 @@ func APIKeyAuthFunc(validKeys []string) grpcauth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
+			method, _ := grpc.Method(ctx)
+			log.Warn(ctx, "msg", "api key auth failed: missing metadata", "method", method)
 			return nil, status.Error(codes.Unauthenticated, "missing metadata")
 		}
 		keys := md.Get(apiKeyHeader)
 		if len(keys) == 0 {
+			method, _ := grpc.Method(ctx)
+			log.Warn(ctx, "msg", "api key auth failed: missing header", "method", method, "header", apiKeyHeader)
 			return nil, status.Errorf(codes.Unauthenticated, "missing %s header", apiKeyHeader)
 		}
 		if _, valid := keySet[keys[0]]; !valid {
+			method, _ := grpc.Method(ctx)
+			log.Warn(ctx, "msg", "api key auth failed: invalid key", "method", method)
 			return nil, status.Error(codes.Unauthenticated, "invalid API key")
 		}
 		return ctx, nil
