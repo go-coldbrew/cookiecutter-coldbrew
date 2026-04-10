@@ -33,7 +33,10 @@ make run-docker      # Run in Docker container
 │   ├── service.go       # Business logic: implements gRPC service interface
 │   ├── healthcheck.go   # Kubernetes liveness/readiness probes
 │   ├── service_test.go  # Unit tests and benchmarks
-│   └── healthcheck_test.go
+│   ├── healthcheck_test.go
+│   └── auth/
+│       ├── auth.go      # JWT + API-key auth interceptor examples (uncomment in main.go to enable)
+│       └── auth_test.go
 ├── proto/
 │   └── *.proto          # Protobuf definitions (source of truth for API)
 │   └── *.pb.go          # GENERATED — do not edit

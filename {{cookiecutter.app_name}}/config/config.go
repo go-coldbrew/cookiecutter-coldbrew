@@ -6,6 +6,7 @@ import (
 	cbConfig "github.com/go-coldbrew/core/config"
 	"github.com/go-coldbrew/log"
 	"github.com/kelseyhightower/envconfig"
+	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 )
 
 // defaultConfig is the default configuration for the application
@@ -14,6 +15,7 @@ var defaultConfig Config
 
 type Config struct {
 	cbConfig.Config
+	auth.AuthConfig
 	PanicOnConfigError bool `envconfig:"PANIC_ON_CONFIG_ERROR" default:"true"`
 	// App configuration
 	// Remove this line and add your own configuration
