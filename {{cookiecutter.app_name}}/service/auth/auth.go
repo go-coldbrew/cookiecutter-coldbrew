@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-coldbrew/interceptors"
 	"github.com/golang-jwt/jwt/v5"
@@ -168,4 +169,18 @@ func APIKeyAuthFunc(validKeys []string) grpcauth.AuthFunc {
 		}
 		return ctx, nil
 	}
+}
+
+// GenerateTestToken creates a signed JWT for local development and testing.
+// Do not use in production — use a proper identity provider instead.
+func GenerateTestToken(secret string, subject string, duration time.Duration) (string, error) {
+	claims := Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   subject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
 }
