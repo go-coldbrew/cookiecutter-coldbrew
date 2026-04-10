@@ -144,7 +144,7 @@ func TestAPIKeyAuthFunc_MissingMetadata(t *testing.T) {
 	assert.Equal(t, codes.Unauthenticated, status.Code(err))
 }
 
-func TestSkipMethodsAuthFunc_HealthCheck(t *testing.T) {
+func TestSkipMethodsAuthFunc(t *testing.T) {
 	// Auth func that always fails — should be skipped for health methods
 	authFunc := func(ctx context.Context) (context.Context, error) {
 		return nil, status.Error(codes.Unauthenticated, "should not be called")
@@ -155,11 +155,15 @@ func TestSkipMethodsAuthFunc_HealthCheck(t *testing.T) {
 		method string
 		skip   bool
 	}{
-		{"/myservice.v1.Svc/HealthCheck", true},       // contains "healthcheck"
-		{"/myservice.v1.Svc/ReadyCheck", true},        // contains "readycheck"
-		{"/grpc.health.v1.Health/Check", true},         // contains "grpc.health.v1.health"
-		{"/grpc.health.v1.Health/Watch", true},         // contains "grpc.health.v1.health"
+		// Exact matches from defaultSkipMethods
+		{"/{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}/HealthCheck", true},
+		{"/{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}/ReadyCheck", true},
+		{"/grpc.health.v1.Health/Check", true},
+		{"/grpc.health.v1.Health/Watch", true},
 		{"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo", true},
+		{"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo", true},
+		// Should NOT skip — exact match only, no substring
+		{"/myservice.v1.Svc/GetHealthCheckStatus", false},
 		{"/myservice.v1.Svc/Echo", false},
 	}
 	for _, tt := range tests {

@@ -28,10 +28,17 @@ import (
 
 const apiKeyHeader = "x-api-key"
 
-// defaultSkipMethods matches ColdBrew's default FilterMethods — these methods
-// are skipped by auth interceptors so that health probes and gRPC reflection
-// continue to work without credentials.
-var defaultSkipMethods = []string{"healthcheck", "readycheck", "serverreflectioninfo", "grpc.health.v1.health"}
+// defaultSkipMethods lists exact gRPC method paths that bypass auth so
+// health probes and gRPC reflection work without credentials.
+//nolint:gochecknoglobals
+var defaultSkipMethods = map[string]struct{}{
+	"/{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}/HealthCheck":     {},
+	"/{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}/ReadyCheck":      {},
+	"/grpc.health.v1.Health/Check":                                                 {},
+	"/grpc.health.v1.Health/Watch":                                                 {},
+	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo":                     {},
+	"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo":                {},
+}
 
 // AuthConfig holds authentication configuration loaded from environment variables.
 // Embedded in config.Config (same pattern as cbConfig.Config).
@@ -63,14 +70,11 @@ func Setup(cfg AuthConfig) {
 		grpcauth.StreamServerInterceptor(authFunc))
 }
 
-// skipMethodsAuthFunc wraps an AuthFunc to skip auth for methods whose
-// full method name contains any of the given substrings (case-insensitive).
-func skipMethodsAuthFunc(fn grpcauth.AuthFunc, methods []string) grpcauth.AuthFunc {
+// skipMethodsAuthFunc wraps an AuthFunc to skip auth for methods in the skip set.
+func skipMethodsAuthFunc(fn grpcauth.AuthFunc, skip map[string]struct{}) grpcauth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
-		fullMethod, _ := grpc.Method(ctx)
-		lower := strings.ToLower(fullMethod)
-		for _, m := range methods {
-			if strings.Contains(lower, m) {
+		if fullMethod, ok := grpc.Method(ctx); ok {
+			if _, skip := skip[fullMethod]; skip {
 				return ctx, nil
 			}
 		}
