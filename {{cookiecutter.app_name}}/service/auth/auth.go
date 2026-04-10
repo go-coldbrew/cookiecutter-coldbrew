@@ -15,6 +15,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-coldbrew/interceptors"
 	"github.com/golang-jwt/jwt/v5"
@@ -37,19 +38,37 @@ type AuthConfig struct {
 // Called from main() after config is loaded. If neither JWTSecret nor APIKeys
 // are set, this is a no-op.
 func Setup(cfg AuthConfig) {
-	if cfg.JWTSecret != "" {
-		jwtAuth := JWTAuthFunc(cfg.JWTSecret)
-		interceptors.AddUnaryServerInterceptor(context.Background(),
-			grpcauth.UnaryServerInterceptor(jwtAuth))
-		interceptors.AddStreamServerInterceptor(context.Background(),
-			grpcauth.StreamServerInterceptor(jwtAuth))
+	var authFunc grpcauth.AuthFunc
+	switch {
+	case cfg.JWTSecret != "" && len(cfg.APIKeys) > 0:
+		// Both configured: accept either JWT or API key.
+		authFunc = eitherAuthFunc(JWTAuthFunc(cfg.JWTSecret), APIKeyAuthFunc(cfg.APIKeys))
+	case cfg.JWTSecret != "":
+		authFunc = JWTAuthFunc(cfg.JWTSecret)
+	case len(cfg.APIKeys) > 0:
+		authFunc = APIKeyAuthFunc(cfg.APIKeys)
+	default:
+		return
 	}
-	if len(cfg.APIKeys) > 0 {
-		apiKeyAuth := APIKeyAuthFunc(cfg.APIKeys)
-		interceptors.AddUnaryServerInterceptor(context.Background(),
-			grpcauth.UnaryServerInterceptor(apiKeyAuth))
-		interceptors.AddStreamServerInterceptor(context.Background(),
-			grpcauth.StreamServerInterceptor(apiKeyAuth))
+	interceptors.AddUnaryServerInterceptor(context.Background(),
+		grpcauth.UnaryServerInterceptor(authFunc))
+	interceptors.AddStreamServerInterceptor(context.Background(),
+		grpcauth.StreamServerInterceptor(authFunc))
+}
+
+// eitherAuthFunc returns an AuthFunc that succeeds if any of the provided
+// auth functions succeed. It tries each in order and returns the first success.
+func eitherAuthFunc(authFuncs ...grpcauth.AuthFunc) grpcauth.AuthFunc {
+	return func(ctx context.Context) (context.Context, error) {
+		var lastErr error
+		for _, fn := range authFuncs {
+			authCtx, err := fn(ctx)
+			if err == nil {
+				return authCtx, nil
+			}
+			lastErr = err
+		}
+		return nil, lastErr
 	}
 }
 
@@ -103,6 +122,10 @@ func JWTAuthFunc(secret string) grpcauth.AuthFunc {
 func APIKeyAuthFunc(validKeys []string) grpcauth.AuthFunc {
 	keySet := make(map[string]struct{}, len(validKeys))
 	for _, k := range validKeys {
+		k = strings.TrimSpace(k)
+		if k == "" {
+			continue
+		}
 		keySet[k] = struct{}{}
 	}
 	return func(ctx context.Context) (context.Context, error) {

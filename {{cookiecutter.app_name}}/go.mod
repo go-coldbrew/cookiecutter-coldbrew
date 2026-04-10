@@ -14,8 +14,10 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
 	github.com/go-coldbrew/core v0.1.45
 	github.com/go-coldbrew/errors v0.2.13
+	github.com/go-coldbrew/interceptors v0.1.20
 	github.com/go-coldbrew/log v0.3.1
 	github.com/go-coldbrew/options v0.3.0
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
@@ -122,7 +124,6 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghostiam/protogetter v0.3.20 // indirect
-	github.com/go-coldbrew/interceptors v0.1.20 // indirect
 	github.com/go-coldbrew/options v0.2.7 // indirect
 	github.com/go-coldbrew/tracing v0.2.1 // indirect
 	github.com/go-critic/go-critic v0.14.3 // indirect

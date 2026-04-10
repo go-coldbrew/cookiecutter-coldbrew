@@ -35,7 +35,7 @@ make run-docker      # Run in Docker container
 │   ├── service_test.go  # Unit tests and benchmarks
 │   ├── healthcheck_test.go
 │   └── auth/
-│       ├── auth.go      # JWT + API-key auth interceptor examples (uncomment in main.go to enable)
+│       ├── auth.go      # JWT + API-key auth interceptors (enabled when JWT_SECRET/API_KEYS are set)
 │       └── auth_test.go
 ├── proto/
 │   └── *.proto          # Protobuf definitions (source of truth for API)
