@@ -186,3 +186,41 @@ func (s *fakeStream) Method() string                  { return s.method }
 func (s *fakeStream) SetHeader(metadata.MD) error     { return nil }
 func (s *fakeStream) SendHeader(metadata.MD) error    { return nil }
 func (s *fakeStream) SetTrailer(metadata.MD) error    { return nil }
+
+func TestEitherAuthFunc_APIKeyWhenBothConfigured(t *testing.T) {
+	jwtAuth := JWTAuthFunc(testSecret)
+	apiKeyAuth := APIKeyAuthFunc([]string{"valid-key"})
+	combined := eitherAuthFunc(jwtAuth, apiKeyAuth)
+
+	// API key should work even without JWT
+	ctx, err := combined(ctxWithAPIKey("valid-key"))
+	require.NoError(t, err)
+	assert.NotNil(t, ctx)
+}
+
+func TestEitherAuthFunc_InvalidJWTFallsThrough(t *testing.T) {
+	jwtAuth := JWTAuthFunc(testSecret)
+	apiKeyAuth := APIKeyAuthFunc([]string{"valid-key"})
+	combined := eitherAuthFunc(jwtAuth, apiKeyAuth)
+
+	// Invalid JWT but valid API key — should succeed via fallthrough
+	md := metadata.Join(
+		metadata.Pairs("authorization", "bearer invalid-token"),
+		metadata.Pairs(apiKeyHeader, "valid-key"),
+	)
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+	_, err := combined(ctx)
+	require.NoError(t, err)
+}
+
+func TestEitherAuthFunc_AllFail(t *testing.T) {
+	jwtAuth := JWTAuthFunc(testSecret)
+	apiKeyAuth := APIKeyAuthFunc([]string{"valid-key"})
+	combined := eitherAuthFunc(jwtAuth, apiKeyAuth)
+
+	// No valid credentials at all
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.MD{})
+	_, err := combined(ctx)
+	require.Error(t, err)
+	assert.Equal(t, codes.Unauthenticated, status.Code(err))
+}

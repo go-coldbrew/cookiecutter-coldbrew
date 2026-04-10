@@ -53,15 +53,23 @@ type AuthConfig struct {
 // Called from main() after config is loaded. If neither JWTSecret nor APIKeys
 // are set, this is a no-op.
 func Setup(ctx context.Context, cfg AuthConfig) {
+	// Normalize API keys — strip whitespace-only entries before checking length
+	validKeys := make([]string, 0, len(cfg.APIKeys))
+	for _, k := range cfg.APIKeys {
+		if k = strings.TrimSpace(k); k != "" {
+			validKeys = append(validKeys, k)
+		}
+	}
+
 	var authFunc grpcauth.AuthFunc
 	switch {
-	case cfg.JWTSecret != "" && len(cfg.APIKeys) > 0:
+	case cfg.JWTSecret != "" && len(validKeys) > 0:
 		// Both configured: accept either JWT or API key.
-		authFunc = eitherAuthFunc(JWTAuthFunc(cfg.JWTSecret), APIKeyAuthFunc(cfg.APIKeys))
+		authFunc = eitherAuthFunc(JWTAuthFunc(cfg.JWTSecret), APIKeyAuthFunc(validKeys))
 	case cfg.JWTSecret != "":
-		authFunc = JWTAuthFunc(cfg.JWTSecret)
-	case len(cfg.APIKeys) > 0:
-		authFunc = APIKeyAuthFunc(cfg.APIKeys)
+		authFunc = withAuthLogging(JWTAuthFunc(cfg.JWTSecret))
+	case len(validKeys) > 0:
+		authFunc = withAuthLogging(APIKeyAuthFunc(validKeys))
 	default:
 		return
 	}
@@ -76,7 +84,7 @@ func Setup(ctx context.Context, cfg AuthConfig) {
 func skipMethodsAuthFunc(fn grpcauth.AuthFunc, skip map[string]struct{}) grpcauth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		if fullMethod, ok := grpc.Method(ctx); ok {
-			if _, skip := skip[fullMethod]; skip {
+			if _, found := skip[fullMethod]; found {
 				return ctx, nil
 			}
 		}
@@ -84,8 +92,21 @@ func skipMethodsAuthFunc(fn grpcauth.AuthFunc, skip map[string]struct{}) grpcaut
 	}
 }
 
+// withAuthLogging wraps an AuthFunc to log failures at warn level.
+func withAuthLogging(fn grpcauth.AuthFunc) grpcauth.AuthFunc {
+	return func(ctx context.Context) (context.Context, error) {
+		authCtx, err := fn(ctx)
+		if err != nil {
+			method, _ := grpc.Method(ctx)
+			log.Warn(ctx, "msg", "auth failed", "method", method, "error", err)
+		}
+		return authCtx, err
+	}
+}
+
 // eitherAuthFunc returns an AuthFunc that succeeds if any of the provided
 // auth functions succeed. It tries each in order and returns the first success.
+// Only logs a warning when all auth methods fail.
 func eitherAuthFunc(authFuncs ...grpcauth.AuthFunc) grpcauth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		var lastErr error
@@ -96,6 +117,8 @@ func eitherAuthFunc(authFuncs ...grpcauth.AuthFunc) grpcauth.AuthFunc {
 			}
 			lastErr = err
 		}
+		method, _ := grpc.Method(ctx)
+		log.Warn(ctx, "msg", "auth failed: all methods exhausted", "method", method, "error", lastErr)
 		return nil, lastErr
 	}
 }
@@ -132,16 +155,12 @@ func JWTAuthFunc(secret string) grpcauth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		tokenStr, err := grpcauth.AuthFromMD(ctx, "bearer")
 		if err != nil {
-			method, _ := grpc.Method(ctx)
-			log.Warn(ctx, "msg", "jwt auth failed: missing or malformed authorization header", "method", method, "error", err)
 			return nil, err
 		}
 
 		claims := &Claims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, keyFunc, validMethods)
 		if err != nil || !token.Valid {
-			method, _ := grpc.Method(ctx)
-			log.Warn(ctx, "msg", "jwt auth failed: invalid token", "method", method, "error", err)
 			return nil, status.Error(codes.Unauthenticated, "invalid token")
 		}
 
@@ -163,19 +182,13 @@ func APIKeyAuthFunc(validKeys []string) grpcauth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			method, _ := grpc.Method(ctx)
-			log.Warn(ctx, "msg", "api key auth failed: missing metadata", "method", method)
 			return nil, status.Error(codes.Unauthenticated, "missing metadata")
 		}
 		keys := md.Get(apiKeyHeader)
 		if len(keys) == 0 {
-			method, _ := grpc.Method(ctx)
-			log.Warn(ctx, "msg", "api key auth failed: missing header", "method", method, "header", apiKeyHeader)
 			return nil, status.Errorf(codes.Unauthenticated, "missing %s header", apiKeyHeader)
 		}
 		if _, valid := keySet[keys[0]]; !valid {
-			method, _ := grpc.Method(ctx)
-			log.Warn(ctx, "msg", "api key auth failed: invalid key", "method", method)
 			return nil, status.Error(codes.Unauthenticated, "invalid API key")
 		}
 		return ctx, nil
