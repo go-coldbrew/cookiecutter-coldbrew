@@ -104,7 +104,7 @@ $ JWT_SECRET=a-string-secret-at-least-256-bits-long make run   # Enable JWT auth
 $ API_KEYS=key1,key2,key3 make run                              # Enable API key auth
 ```
 
-When enabled, all endpoints require authentication except health checks (`/healthcheck`, `/readycheck`) and gRPC reflection. Swagger UI includes an Authorize button for testing.
+When enabled, all gRPC RPCs require authentication except health checks, readiness checks, and gRPC reflection. HTTP admin endpoints (`/metrics`, `/debug/pprof/`, `/swagger/`) are not affected by gRPC auth — use `ADMIN_PORT` to isolate them on a separate port. Swagger UI includes an Authorize button for testing.
 
 Generate a test JWT token:
 

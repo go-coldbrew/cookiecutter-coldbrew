@@ -53,6 +53,8 @@ type AuthConfig struct {
 // Called from main() after config is loaded. If neither JWTSecret nor APIKeys
 // are set, this is a no-op.
 func Setup(ctx context.Context, cfg AuthConfig) {
+	cfg.JWTSecret = strings.TrimSpace(cfg.JWTSecret)
+
 	// Normalize API keys — strip whitespace-only entries before checking length
 	validKeys := make([]string, 0, len(cfg.APIKeys))
 	for _, k := range cfg.APIKeys {
@@ -98,7 +100,7 @@ func withAuthLogging(fn grpcauth.AuthFunc) grpcauth.AuthFunc {
 		authCtx, err := fn(ctx)
 		if err != nil {
 			method, _ := grpc.Method(ctx)
-			log.Warn(ctx, "msg", "auth failed", "method", method, "error", err)
+			log.Warn(ctx, "msg", "auth failed", "method", method, "err", err)
 		}
 		return authCtx, err
 	}
