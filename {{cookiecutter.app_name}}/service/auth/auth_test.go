@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -142,3 +143,42 @@ func TestAPIKeyAuthFunc_MissingMetadata(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, codes.Unauthenticated, status.Code(err))
 }
+
+func TestSkipMethodsAuthFunc_HealthCheck(t *testing.T) {
+	// Auth func that always fails — should be skipped for health methods
+	authFunc := func(ctx context.Context) (context.Context, error) {
+		return nil, status.Error(codes.Unauthenticated, "should not be called")
+	}
+	wrapped := skipMethodsAuthFunc(authFunc, defaultSkipMethods)
+
+	tests := []struct {
+		method string
+		skip   bool
+	}{
+		{"/myservice.v1.Svc/HealthCheck", true},       // contains "healthcheck"
+		{"/myservice.v1.Svc/ReadyCheck", true},        // contains "readycheck"
+		{"/grpc.health.v1.Health/Check", true},         // contains "grpc.health.v1.health"
+		{"/grpc.health.v1.Health/Watch", true},         // contains "grpc.health.v1.health"
+		{"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo", true},
+		{"/myservice.v1.Svc/Echo", false},
+	}
+	for _, tt := range tests {
+		ctx := grpc.NewContextWithServerTransportStream(context.Background(), &fakeStream{method: tt.method})
+		_, err := wrapped(ctx)
+		if tt.skip {
+			assert.NoError(t, err, "expected skip for %s", tt.method)
+		} else {
+			assert.Error(t, err, "expected auth for %s", tt.method)
+		}
+	}
+}
+
+// fakeStream implements grpc.ServerTransportStream for testing grpc.Method().
+type fakeStream struct {
+	method string
+}
+
+func (s *fakeStream) Method() string                  { return s.method }
+func (s *fakeStream) SetHeader(metadata.MD) error     { return nil }
+func (s *fakeStream) SendHeader(metadata.MD) error    { return nil }
+func (s *fakeStream) SetTrailer(metadata.MD) error    { return nil }

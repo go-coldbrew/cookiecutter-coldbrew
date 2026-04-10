@@ -20,12 +20,18 @@ import (
 	"github.com/go-coldbrew/interceptors"
 	"github.com/golang-jwt/jwt/v5"
 	grpcauth "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
 const apiKeyHeader = "x-api-key"
+
+// defaultSkipMethods matches ColdBrew's default FilterMethods — these methods
+// are skipped by auth interceptors so that health probes and gRPC reflection
+// continue to work without credentials.
+var defaultSkipMethods = []string{"healthcheck", "readycheck", "serverreflectioninfo", "grpc.health.v1.health"}
 
 // AuthConfig holds authentication configuration loaded from environment variables.
 // Embedded in config.Config (same pattern as cbConfig.Config).
@@ -50,10 +56,26 @@ func Setup(cfg AuthConfig) {
 	default:
 		return
 	}
+	authFunc = skipMethodsAuthFunc(authFunc, defaultSkipMethods)
 	interceptors.AddUnaryServerInterceptor(context.Background(),
 		grpcauth.UnaryServerInterceptor(authFunc))
 	interceptors.AddStreamServerInterceptor(context.Background(),
 		grpcauth.StreamServerInterceptor(authFunc))
+}
+
+// skipMethodsAuthFunc wraps an AuthFunc to skip auth for methods whose
+// full method name contains any of the given substrings (case-insensitive).
+func skipMethodsAuthFunc(fn grpcauth.AuthFunc, methods []string) grpcauth.AuthFunc {
+	return func(ctx context.Context) (context.Context, error) {
+		fullMethod, _ := grpc.Method(ctx)
+		lower := strings.ToLower(fullMethod)
+		for _, m := range methods {
+			if strings.Contains(lower, m) {
+				return ctx, nil
+			}
+		}
+		return fn(ctx)
+	}
 }
 
 // eitherAuthFunc returns an AuthFunc that succeeds if any of the provided
