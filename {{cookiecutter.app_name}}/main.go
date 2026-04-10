@@ -104,7 +104,7 @@ func main() {
 
 	// Register auth interceptors if JWT_SECRET or API_KEYS env vars are set.
 	// See service/auth/auth.go and https://docs.coldbrew.cloud/howto/auth/
-	auth.Setup(config.Get().AuthConfig)
+	auth.Setup(context.Background(), config.Get().AuthConfig)
 
 	// Initialize the ColdBrew framework with the given configuration
 	// This is a good place to customise the ColdBrew framework configuration if needed

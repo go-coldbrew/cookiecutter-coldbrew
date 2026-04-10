@@ -50,7 +50,7 @@ type AuthConfig struct {
 // Setup registers auth interceptors based on the loaded config.
 // Called from main() after config is loaded. If neither JWTSecret nor APIKeys
 // are set, this is a no-op.
-func Setup(cfg AuthConfig) {
+func Setup(ctx context.Context, cfg AuthConfig) {
 	var authFunc grpcauth.AuthFunc
 	switch {
 	case cfg.JWTSecret != "" && len(cfg.APIKeys) > 0:
@@ -64,9 +64,9 @@ func Setup(cfg AuthConfig) {
 		return
 	}
 	authFunc = skipMethodsAuthFunc(authFunc, defaultSkipMethods)
-	interceptors.AddUnaryServerInterceptor(context.Background(),
+	interceptors.AddUnaryServerInterceptor(ctx,
 		grpcauth.UnaryServerInterceptor(authFunc))
-	interceptors.AddStreamServerInterceptor(context.Background(),
+	interceptors.AddStreamServerInterceptor(ctx,
 		grpcauth.StreamServerInterceptor(authFunc))
 }
 
@@ -136,7 +136,7 @@ func JWTAuthFunc(secret string) grpcauth.AuthFunc {
 		claims := &Claims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, keyFunc, validMethods)
 		if err != nil || !token.Valid {
-			return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
+			return nil, status.Error(codes.Unauthenticated, "invalid token")
 		}
 
 		return context.WithValue(ctx, contextKey{}, claims), nil
