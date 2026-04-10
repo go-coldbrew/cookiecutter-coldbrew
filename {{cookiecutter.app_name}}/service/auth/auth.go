@@ -120,7 +120,7 @@ func eitherAuthFunc(authFuncs ...grpcauth.AuthFunc) grpcauth.AuthFunc {
 			lastErr = err
 		}
 		method, _ := grpc.Method(ctx)
-		log.Warn(ctx, "msg", "auth failed: all methods exhausted", "method", method, "error", lastErr)
+		log.Warn(ctx, "msg", "auth failed: all methods exhausted", "method", method, "err", lastErr)
 		return nil, lastErr
 	}
 }
