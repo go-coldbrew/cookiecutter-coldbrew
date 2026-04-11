@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 	"github.com/go-coldbrew/core"
-	"github.com/go-coldbrew/log"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/swaggest/swgui"
 	"github.com/swaggest/swgui/v5emb"
@@ -142,5 +142,7 @@ func main() {
 
 	// Start the service and wait for it to exit
 	// This is a blocking call and will not return until the service exits completely
-	log.Error(context.Background(), cb.Run())
+	if err := cb.Run(); err != nil {
+		slog.LogAttrs(context.Background(), slog.LevelError, "service exited", slog.Any("err", err))
+	}
 }

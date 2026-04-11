@@ -2,9 +2,9 @@ package config
 
 import (
 	"context"
+	"log/slog"
 
 	cbConfig "github.com/go-coldbrew/core/config"
-	"github.com/go-coldbrew/log"
 	"github.com/kelseyhightower/envconfig"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 )
@@ -29,7 +29,7 @@ func init() {
 		if defaultConfig.PanicOnConfigError {
 			panic(err)
 		} else {
-			log.Error(context.Background(), "msg", "error while loading config", "err", err)
+			slog.LogAttrs(context.Background(), slog.LevelError, "error while loading config", slog.Any("err", err))
 		}
 	}
 }
