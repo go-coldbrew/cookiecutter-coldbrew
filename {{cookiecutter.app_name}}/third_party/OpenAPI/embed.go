@@ -2,6 +2,6 @@ package openapi
 
 import "embed"
 
-//go:embed *
-var ContentFS embed.FS
+//go:embed *.json
+var SpecFS embed.FS
 

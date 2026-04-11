@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"mime"
 	"net/http"
+	"strings"
 
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
 	{{cookiecutter.app_name|lower}} "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
@@ -13,6 +13,8 @@ import (
 	"github.com/go-coldbrew/core"
 	"github.com/go-coldbrew/log"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/swaggest/swgui"
+	"github.com/swaggest/swgui/v5emb"
 	"google.golang.org/grpc"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 
@@ -78,16 +80,36 @@ func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
 	return nil
 }
 
-// getOpenAPIHandler returns the OpenAPI UI handler that is used by the ColdBrew framework to serve the OpenAPI UI
+// getOpenAPIHandler returns the OpenAPI UI handler powered by swgui (Swagger UI v5).
+// ColdBrew mounts this at /swagger/ with StripPrefix — we prepend the prefix back
+// so swgui can route its assets correctly.
 func getOpenAPIHandler() http.Handler {
-	// getOpenAPIHandler serves an OpenAPI UI.
-	// Adapted from https://github.com/philips/grpc-gateway-example/blob/a269bcb5931ca92be0ceae6130ac27ae89582ecc/cmd/serve.go#L63
-	err := mime.AddExtensionType(".svg", "image/svg+xml")
-	if err != nil {
-		log.Error(context.Background(), "msg", "error adding mime type", "err", err)
-	}
-
-	return http.FileServer(http.FS(openapi.ContentFS))
+	const prefix = "/swagger/"
+	specFile := "{{cookiecutter.app_name|lower}}.swagger.json"
+	specHandler := http.FileServerFS(openapi.SpecFS)
+	uiHandler := v5emb.NewWithConfig(swgui.Config{
+		SettingsUI: map[string]string{
+			// Auto-prepend "Bearer " to the BearerJWT auth value in Swagger UI
+			"requestInterceptor": `function(req) {
+				var auth = req.headers["Authorization"];
+				if (auth && !auth.startsWith("Bearer ")) {
+					req.headers["Authorization"] = "Bearer " + auth;
+				}
+				return req;
+			}`,
+		},
+	})("{{cookiecutter.service_name}}", prefix+specFile, prefix)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Serve the generated spec JSON
+		if r.URL.Path == "/"+specFile || r.URL.Path == specFile {
+			r.URL.Path = "/" + specFile
+			specHandler.ServeHTTP(w, r)
+			return
+		}
+		// Restore the prefix that ColdBrew stripped so swgui can route assets
+		r.URL.Path = prefix + strings.TrimPrefix(r.URL.Path, "/")
+		uiHandler.ServeHTTP(w, r)
+	})
 }
 
 // main is the entry point of the service
