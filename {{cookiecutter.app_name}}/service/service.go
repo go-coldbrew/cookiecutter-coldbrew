@@ -3,9 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"log/slog"
+	"time"
 
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
 	proto "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"

@@ -58,7 +58,7 @@ make run-docker      # Run in Docker container
 ## Key Patterns
 
 - **gRPC-first**: All endpoints are defined in `proto/{{cookiecutter.app_name|lower}}.proto`. HTTP/JSON routes are auto-generated via grpc-gateway annotations. Never create HTTP handlers manually.
-- **Context propagation**: `context.Context` is the first parameter everywhere. Interceptors propagate trace IDs, log fields, and options through it. Service code uses `slog.LogAttrs(ctx, ...)` for logging; ColdBrew's Handler automatically injects context fields. Use `log.AddAttrsToContext` to add typed fields.
+- **Context propagation**: `context.Context` is the first parameter everywhere. Interceptors propagate trace IDs, log fields, and options through it. Service code uses `slog.LogAttrs(ctx, ...)` for logging; ColdBrew's Handler automatically injects context fields. Use `github.com/go-coldbrew/log.AddAttrsToContext` (imported as `cblog` in service.go) to add typed context fields.
 - **Configuration**: All config via environment variables using `envconfig`. Add fields to `config/config.go` with struct tags. See [ColdBrew config docs](https://pkg.go.dev/github.com/go-coldbrew/core/config#Config) for framework options.
 - **Authentication**: JWT and API key auth are built in via `service/auth/`. Config-controlled — set `JWT_SECRET` or `API_KEYS` env vars to enable. Health/ready/reflection RPCs bypass auth automatically. See [Authentication docs](https://docs.coldbrew.cloud/howto/auth/).
 - **Health checks**: Kubernetes liveness (`/healthcheck`) and readiness (`/readycheck`) are built-in. Service starts as NOT_SERVING until `SetReady()` is called.
