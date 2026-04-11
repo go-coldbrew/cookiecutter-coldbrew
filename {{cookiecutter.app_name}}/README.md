@@ -95,6 +95,25 @@ You can find the environment variables for local development in the `local.env` 
 
 A large number of configuration options are powered by [Coldbrew] and used as environment variables. You can find the list of environment variables [here](https://pkg.go.dev/github.com/go-coldbrew/core/config#Config).
 
+## Authentication
+
+JWT and API key authentication are built in and config-controlled. Set environment variables to enable:
+
+```console
+$ JWT_SECRET=a-string-secret-at-least-256-bits-long make run   # Enable JWT auth
+$ API_KEYS=key1,key2,key3 make run                              # Enable API key auth
+```
+
+When enabled, all gRPC RPCs require authentication except health checks, readiness checks, and gRPC reflection. HTTP admin endpoints (`/metrics`, `/debug/pprof/`, `/swagger/`) are not affected by gRPC auth — use `ADMIN_PORT` to isolate them on a separate port. Swagger UI includes an Authorize button for testing.
+
+Generate a test JWT token:
+
+```go
+token, _ := auth.GenerateTestToken("a-string-secret-at-least-256-bits-long", "test-user", 1*time.Hour)
+```
+
+See [Authentication docs](https://docs.coldbrew.cloud/howto/auth/) for details on claims access, RSA/ECDSA keys, and authorization.
+
 ## Logging
 
 This project uses `go-coldbrew/log` to manage logging. You can find documentation [here](https://pkg.go.dev/github.com/go-coldbrew/log).

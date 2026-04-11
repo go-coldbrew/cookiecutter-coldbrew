@@ -8,6 +8,7 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
 	{{cookiecutter.app_name|lower}} "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service"
+	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 	"github.com/go-coldbrew/core"
 	"github.com/go-coldbrew/log"
@@ -100,6 +101,10 @@ func main() {
 	}
 	// Set the release name to the git commit hash from the version package
 	cfg.ReleaseName = version.GitCommit
+
+	// Register auth interceptors if JWT_SECRET or API_KEYS env vars are set.
+	// See service/auth/auth.go and https://docs.coldbrew.cloud/howto/auth/
+	auth.Setup(context.Background(), config.Get().AuthConfig)
 
 	// Initialize the ColdBrew framework with the given configuration
 	// This is a good place to customise the ColdBrew framework configuration if needed

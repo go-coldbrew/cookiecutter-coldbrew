@@ -33,7 +33,10 @@ make run-docker      # Run in Docker container
 │   ├── service.go       # Business logic: implements gRPC service interface
 │   ├── healthcheck.go   # Kubernetes liveness/readiness probes
 │   ├── service_test.go  # Unit tests and benchmarks
-│   └── healthcheck_test.go
+│   ├── healthcheck_test.go
+│   └── auth/
+│       ├── auth.go      # JWT + API-key auth interceptors (enabled when JWT_SECRET/API_KEYS are set)
+│       └── auth_test.go
 ├── proto/
 │   └── *.proto          # Protobuf definitions (source of truth for API)
 │   └── *.pb.go          # GENERATED — do not edit
@@ -57,6 +60,7 @@ make run-docker      # Run in Docker container
 - **gRPC-first**: All endpoints are defined in `proto/{{cookiecutter.app_name|lower}}.proto`. HTTP/JSON routes are auto-generated via grpc-gateway annotations. Never create HTTP handlers manually.
 - **Context propagation**: `context.Context` is the first parameter everywhere. Interceptors propagate trace IDs, log fields, and options through it.
 - **Configuration**: All config via environment variables using `envconfig`. Add fields to `config/config.go` with struct tags. See [ColdBrew config docs](https://pkg.go.dev/github.com/go-coldbrew/core/config#Config) for framework options.
+- **Authentication**: JWT and API key auth are built in via `service/auth/`. Config-controlled — set `JWT_SECRET` or `API_KEYS` env vars to enable. Health/ready/reflection RPCs bypass auth automatically. See [Authentication docs](https://docs.coldbrew.cloud/howto/auth/).
 - **Health checks**: Kubernetes liveness (`/healthcheck`) and readiness (`/readycheck`) are built-in. Service starts as NOT_SERVING until `SetReady()` is called.
 - **Observability**: Prometheus metrics at `/metrics`, pprof at `/debug/pprof/`, OpenAPI/Swagger at `/swagger/`.
 - **Graceful shutdown**: ColdBrew handles SIGINT/SIGTERM. The `Stop()` method on your service is called for cleanup.

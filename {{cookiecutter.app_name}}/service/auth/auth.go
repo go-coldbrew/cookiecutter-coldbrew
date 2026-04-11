@@ -1,0 +1,212 @@
+// Package auth provides authentication interceptors for ColdBrew gRPC services.
+//
+// Auth is config-controlled: set JWT_SECRET or API_KEYS environment variables to enable.
+// When neither is set, auth is a no-op.
+//
+// The AuthConfig struct is embedded in config.Config (same pattern as cbConfig.Config)
+// and Setup() is called from main() to register interceptors.
+//
+// References:
+//   - go-grpc-middleware auth: https://github.com/grpc-ecosystem/go-grpc-middleware/tree/main/interceptors/auth
+//   - grpc-go authz (policy-based authorization): https://github.com/grpc/grpc-go/tree/master/authz
+//   - golang-jwt/jwt: https://github.com/golang-jwt/jwt
+package auth
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/go-coldbrew/interceptors"
+	"github.com/go-coldbrew/log"
+	"github.com/golang-jwt/jwt/v5"
+	grpcauth "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+)
+
+const apiKeyHeader = "x-api-key"
+
+// defaultSkipMethods lists exact gRPC method paths that bypass auth so
+// health probes and gRPC reflection work without credentials.
+//nolint:gochecknoglobals
+var defaultSkipMethods = map[string]struct{}{
+	"/{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}/HealthCheck":     {},
+	"/{{cookiecutter.grpc_package}}.{{cookiecutter.service_name}}/ReadyCheck":      {},
+	"/grpc.health.v1.Health/Check":                                                 {},
+	"/grpc.health.v1.Health/Watch":                                                 {},
+	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo":                     {},
+	"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo":                {},
+}
+
+// AuthConfig holds authentication configuration loaded from environment variables.
+// Embedded in config.Config (same pattern as cbConfig.Config).
+type AuthConfig struct {
+	JWTSecret string   `envconfig:"JWT_SECRET"`
+	APIKeys   []string `envconfig:"API_KEYS"`
+}
+
+// Setup registers auth interceptors based on the loaded config.
+// Called from main() after config is loaded. If neither JWTSecret nor APIKeys
+// are set, this is a no-op.
+func Setup(ctx context.Context, cfg AuthConfig) {
+	cfg.JWTSecret = strings.TrimSpace(cfg.JWTSecret)
+
+	// Normalize API keys — strip whitespace-only entries before checking length
+	validKeys := make([]string, 0, len(cfg.APIKeys))
+	for _, k := range cfg.APIKeys {
+		if k = strings.TrimSpace(k); k != "" {
+			validKeys = append(validKeys, k)
+		}
+	}
+
+	var authFunc grpcauth.AuthFunc
+	switch {
+	case cfg.JWTSecret != "" && len(validKeys) > 0:
+		// Both configured: accept either JWT or API key.
+		authFunc = eitherAuthFunc(JWTAuthFunc(cfg.JWTSecret), APIKeyAuthFunc(validKeys))
+	case cfg.JWTSecret != "":
+		authFunc = withAuthLogging(JWTAuthFunc(cfg.JWTSecret))
+	case len(validKeys) > 0:
+		authFunc = withAuthLogging(APIKeyAuthFunc(validKeys))
+	default:
+		return
+	}
+	authFunc = skipMethodsAuthFunc(authFunc, defaultSkipMethods)
+	interceptors.AddUnaryServerInterceptor(ctx,
+		grpcauth.UnaryServerInterceptor(authFunc))
+	interceptors.AddStreamServerInterceptor(ctx,
+		grpcauth.StreamServerInterceptor(authFunc))
+}
+
+// skipMethodsAuthFunc wraps an AuthFunc to skip auth for methods in the skip set.
+func skipMethodsAuthFunc(fn grpcauth.AuthFunc, skip map[string]struct{}) grpcauth.AuthFunc {
+	return func(ctx context.Context) (context.Context, error) {
+		if fullMethod, ok := grpc.Method(ctx); ok {
+			if _, found := skip[fullMethod]; found {
+				return ctx, nil
+			}
+		}
+		return fn(ctx)
+	}
+}
+
+// withAuthLogging wraps an AuthFunc to log failures at warn level.
+func withAuthLogging(fn grpcauth.AuthFunc) grpcauth.AuthFunc {
+	return func(ctx context.Context) (context.Context, error) {
+		authCtx, err := fn(ctx)
+		if err != nil {
+			method, _ := grpc.Method(ctx)
+			log.Warn(ctx, "msg", "auth failed", "method", method, "err", err)
+		}
+		return authCtx, err
+	}
+}
+
+// eitherAuthFunc returns an AuthFunc that succeeds if any of the provided
+// auth functions succeed. It tries each in order and returns the first success.
+// Only logs a warning when all auth methods fail.
+func eitherAuthFunc(authFuncs ...grpcauth.AuthFunc) grpcauth.AuthFunc {
+	return func(ctx context.Context) (context.Context, error) {
+		var lastErr error
+		for _, fn := range authFuncs {
+			authCtx, err := fn(ctx)
+			if err == nil {
+				return authCtx, nil
+			}
+			lastErr = err
+		}
+		method, _ := grpc.Method(ctx)
+		log.Warn(ctx, "msg", "auth failed: all methods exhausted", "method", method, "err", lastErr)
+		return nil, lastErr
+	}
+}
+
+type contextKey struct{}
+
+// Claims holds the parsed JWT claims, accessible in handlers via ClaimsFromContext.
+// Subject, Issuer, ExpiresAt, etc. are available via the embedded RegisteredClaims.
+type Claims struct {
+	jwt.RegisteredClaims
+}
+
+// ClaimsFromContext returns the JWT claims from the context, or nil if not present.
+func ClaimsFromContext(ctx context.Context) *Claims {
+	c, _ := ctx.Value(contextKey{}).(*Claims)
+	return c
+}
+
+// JWTAuthFunc returns an [grpcauth.AuthFunc] that validates Bearer JWT tokens
+// using HMAC-SHA256. The secret is the shared signing key.
+//
+// To use a different signing method (RSA, ECDSA), replace jwt.SigningMethodHS256
+// with the appropriate method and change the keyFunc to return your public key.
+// See https://github.com/golang-jwt/jwt for details.
+func JWTAuthFunc(secret string) grpcauth.AuthFunc {
+	secretBytes := []byte(secret)
+	keyFunc := func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretBytes, nil
+	}
+	validMethods := jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()})
+	return func(ctx context.Context) (context.Context, error) {
+		tokenStr, err := grpcauth.AuthFromMD(ctx, "bearer")
+		if err != nil {
+			return nil, err
+		}
+
+		claims := &Claims{}
+		token, err := jwt.ParseWithClaims(tokenStr, claims, keyFunc, validMethods)
+		if err != nil || !token.Valid {
+			return nil, status.Error(codes.Unauthenticated, "invalid token")
+		}
+
+		return context.WithValue(ctx, contextKey{}, claims), nil
+	}
+}
+
+// APIKeyAuthFunc returns an [grpcauth.AuthFunc] that validates API keys from the
+// "x-api-key" gRPC metadata header. validKeys is the set of accepted keys.
+func APIKeyAuthFunc(validKeys []string) grpcauth.AuthFunc {
+	keySet := make(map[string]struct{}, len(validKeys))
+	for _, k := range validKeys {
+		k = strings.TrimSpace(k)
+		if k == "" {
+			continue
+		}
+		keySet[k] = struct{}{}
+	}
+	return func(ctx context.Context) (context.Context, error) {
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, status.Error(codes.Unauthenticated, "missing metadata")
+		}
+		keys := md.Get(apiKeyHeader)
+		if len(keys) == 0 {
+			return nil, status.Errorf(codes.Unauthenticated, "missing %s header", apiKeyHeader)
+		}
+		if _, valid := keySet[keys[0]]; !valid {
+			return nil, status.Error(codes.Unauthenticated, "invalid API key")
+		}
+		return ctx, nil
+	}
+}
+
+// GenerateTestToken creates a signed JWT for local development and testing.
+// Do not use in production — use a proper identity provider instead.
+func GenerateTestToken(secret string, subject string, duration time.Duration) (string, error) {
+	claims := Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   subject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}

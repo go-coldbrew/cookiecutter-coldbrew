@@ -21,6 +21,38 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   }
   schemes: HTTP;
   schemes: HTTPS;
+  security_definitions: {
+    security: {
+      key: "BearerJWT";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "JWT Bearer token. Format: \"Bearer {token}\". Set JWT_SECRET env var to enable.";
+      }
+    }
+    security: {
+      key: "APIKey";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "x-api-key";
+        description: "API key authentication. Set API_KEYS env var to enable.";
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "BearerJWT";
+      value: {};
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "APIKey";
+      value: {};
+    }
+  }
 };
 
 message EchoRequest{
@@ -38,12 +70,18 @@ service {{cookiecutter.service_name}} {
       option (google.api.http) = {
           get: "/healthcheck"
       };
+      option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+          security: {}; // No auth required
+      };
   }
 
   //ReadinessProbe for the service
   rpc ReadyCheck(google.protobuf.Empty) returns (google.api.HttpBody) {
       option (google.api.http) = {
           get: "/readycheck"
+      };
+      option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+          security: {}; // No auth required
       };
   }
 
