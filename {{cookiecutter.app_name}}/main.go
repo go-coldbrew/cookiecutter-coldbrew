@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
 	{{cookiecutter.app_name|lower}} "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
@@ -106,8 +107,7 @@ func getOpenAPIHandler() http.Handler {
 			return
 		}
 		// Restore the prefix that ColdBrew stripped so swgui can route assets
-		r.URL.Path = prefix + r.URL.Path
-		r.RequestURI = prefix + r.RequestURI
+		r.URL.Path = prefix + strings.TrimPrefix(r.URL.Path, "/")
 		uiHandler.ServeHTTP(w, r)
 	})
 }
