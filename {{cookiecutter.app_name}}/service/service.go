@@ -58,7 +58,7 @@ func (s *svc) Echo(ctx context.Context, req *proto.EchoRequest) (resp *proto.Ech
 
 	// Add typed context fields — these appear in all logs for this request.
 	// ColdBrew interceptors already add trace_id and grpcMethod automatically.
-	ctx = cblog.AddAttrsToContext(ctx, slog.String("echo_msg", req.GetMsg()))
+	ctx = cblog.AddAttrsToContext(ctx, slog.Int("echo_msg_len", len(req.GetMsg())))
 
 	slog.LogAttrs(ctx, slog.LevelInfo, "echo requested")
 
