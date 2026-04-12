@@ -15,7 +15,7 @@ require (
 	github.com/go-coldbrew/core v0.1.45
 	github.com/go-coldbrew/errors v0.2.13
 	github.com/go-coldbrew/interceptors v0.1.20
-	github.com/go-coldbrew/log v0.3.1
+	github.com/go-coldbrew/log v0.4.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
