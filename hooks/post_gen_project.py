@@ -36,8 +36,9 @@ def init_git():
         git.wait()
 
 def init_proto():
-    # Order matters: download → generate (needs buf plugins) → mock (needs generated
-    # interfaces) → tidy (needs all imports including generated mocks to resolve)
+    # Order matters: download → generate (needs buf plugins) → tidy -e (reconcile
+    # indirect deps; -e ignores missing mock packages) → mock (needs generated
+    # interfaces) → tidy (final, needs all imports including mocks to resolve)
     print("Starting proto initialization...")
     print("Step 1/5: Fetching Go modules (this might take a few minutes)...")
     code = Popen(["go", "mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
@@ -52,8 +53,11 @@ def init_proto():
         sys.exit(code)
 
     print("Step 3/5: Tidying Go modules (pre-mock)...")
-    # -e flag ignores errors from missing mock packages (generated next step)
-    Popen(["go", "mod", "tidy", "-e"], cwd=PROJECT_DIRECTORY).wait()
+    # -e flag ignores errors from missing mock packages (generated next step).
+    # Non-zero exit is expected (mock imports don't resolve yet) but logged for debugging.
+    code = Popen(["go", "mod", "tidy", "-e"], cwd=PROJECT_DIRECTORY).wait()
+    if code != 0:
+        print("Warning: pre-mock 'go mod tidy -e' exited with code %d (expected if mock packages don't exist yet)." % code)
 
     print("Step 4/5: Running 'make mock'...")
     code = Popen(["make", "mock"], cwd=PROJECT_DIRECTORY).wait()
