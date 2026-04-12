@@ -45,19 +45,23 @@ def init_proto():
         print("Error: Failed to fetch Go modules.")
         sys.exit(code)
 
-    print("Step 2/4: Running 'make generate'...")
+    print("Step 2/5: Running 'make generate'...")
     code = Popen(["make", "generate"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'make generate' failed.")
         sys.exit(code)
 
-    print("Step 3/4: Running 'make mock'...")
+    print("Step 3/5: Tidying Go modules (pre-mock)...")
+    # -e flag ignores errors from missing mock packages (generated next step)
+    Popen(["go", "mod", "tidy", "-e"], cwd=PROJECT_DIRECTORY).wait()
+
+    print("Step 4/5: Running 'make mock'...")
     code = Popen(["make", "mock"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'make mock' failed.")
         sys.exit(code)
 
-    print("Step 4/4: Tidying Go modules...")
+    print("Step 5/5: Tidying Go modules (final)...")
     code = Popen(["go", "mod", "tidy"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: 'go mod tidy' failed.")
