@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
@@ -11,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	"github.com/go-coldbrew/errors"
-	"github.com/go-coldbrew/log"
+	cblog "github.com/go-coldbrew/log"
 	"google.golang.org/grpc/health"
 )
 
@@ -42,8 +43,8 @@ func (s *svc) HealthCheck(ctx context.Context, _ *emptypb.Empty) (*httpbody.Http
 }
 
 // Echo returns the message with the prefix added
-// TODO: remove this, since this is just to demonstrate how to use endpoints and config
-func (s *svc) Echo(_ context.Context, req *proto.EchoRequest) (resp *proto.EchoResponse, err error) {
+// TODO: remove this, since this is just to demonstrate how to use endpoints, config, and logging
+func (s *svc) Echo(ctx context.Context, req *proto.EchoRequest) (resp *proto.EchoResponse, err error) {
 	start := time.Now()
 	outcome := metrics.OutcomeSuccess
 	defer func() {
@@ -53,6 +54,13 @@ func (s *svc) Echo(_ context.Context, req *proto.EchoRequest) (resp *proto.EchoR
 		s.monitoring.IncEchoTotal(outcome)
 		s.monitoring.ObserveEchoDuration(outcome, time.Since(start))
 	}()
+
+	// Add typed context fields — these appear in all logs for this request.
+	// ColdBrew interceptors already add trace_id and grpcMethod automatically.
+	ctx = cblog.AddAttrsToContext(ctx, slog.Int("echo_msg_len", len(req.GetMsg())))
+
+	slog.LogAttrs(ctx, slog.LevelInfo, "echo requested")
+
 	return &proto.EchoResponse{
 		Msg: fmt.Sprintf("%s: %s", s.prefix, req.GetMsg()),
 	}, nil
@@ -62,7 +70,7 @@ func (s *svc) Echo(_ context.Context, req *proto.EchoRequest) (resp *proto.EchoR
 // TODO: remove this, since this is just to demonstrate how to use endpoints and config
 func (s *svc) Error(ctx context.Context, req *proto.EchoRequest) (*proto.EchoResponse, error) {
 	err := errors.New("This is an Error")
-	log.Info(ctx, "error requested")
+	slog.LogAttrs(ctx, slog.LevelInfo, "error requested")
 	return nil, errors.Wrap(err, "endpoint error")
 }
 

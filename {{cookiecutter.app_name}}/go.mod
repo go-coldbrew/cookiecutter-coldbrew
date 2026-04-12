@@ -12,10 +12,10 @@ tool (
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
-	github.com/go-coldbrew/core v0.1.45
-	github.com/go-coldbrew/errors v0.2.13
-	github.com/go-coldbrew/interceptors v0.1.20
-	github.com/go-coldbrew/log v0.3.1
+	github.com/go-coldbrew/core v0.1.51
+	github.com/go-coldbrew/errors v0.2.15
+	github.com/go-coldbrew/interceptors v0.1.25
+	github.com/go-coldbrew/log v0.4.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
@@ -134,7 +134,7 @@ require (
 	github.com/ghostiam/protogetter v0.3.20 // indirect
 	github.com/go-coldbrew/hystrixprometheus v0.1.2 // indirect
 	github.com/go-coldbrew/options v0.3.0 // indirect
-	github.com/go-coldbrew/tracing v0.2.1 // indirect
+	github.com/go-coldbrew/tracing v0.2.2 // indirect
 	github.com/go-critic/go-critic v0.14.3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

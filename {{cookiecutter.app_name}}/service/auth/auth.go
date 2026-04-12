@@ -15,11 +15,11 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/go-coldbrew/interceptors"
-	"github.com/go-coldbrew/log"
 	"github.com/golang-jwt/jwt/v5"
 	grpcauth "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"google.golang.org/grpc"
@@ -100,7 +100,7 @@ func withAuthLogging(fn grpcauth.AuthFunc) grpcauth.AuthFunc {
 		authCtx, err := fn(ctx)
 		if err != nil {
 			method, _ := grpc.Method(ctx)
-			log.Warn(ctx, "msg", "auth failed", "method", method, "err", err)
+			slog.LogAttrs(ctx, slog.LevelWarn, "auth failed", slog.String("method", method), slog.Any("err", err))
 		}
 		return authCtx, err
 	}
@@ -120,7 +120,7 @@ func eitherAuthFunc(authFuncs ...grpcauth.AuthFunc) grpcauth.AuthFunc {
 			lastErr = err
 		}
 		method, _ := grpc.Method(ctx)
-		log.Warn(ctx, "msg", "auth failed: all methods exhausted", "method", method, "err", lastErr)
+		slog.LogAttrs(ctx, slog.LevelWarn, "auth failed: all methods exhausted", slog.String("method", method), slog.Any("err", lastErr))
 		return nil, lastErr
 	}
 }
