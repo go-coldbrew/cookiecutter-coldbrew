@@ -39,7 +39,7 @@ def init_proto():
     # Order matters: download → generate (needs buf plugins) → mock (needs generated
     # interfaces) → tidy (needs all imports including generated mocks to resolve)
     print("Starting proto initialization...")
-    print("Step 1/4: Fetching Go modules (this might take a few minutes)...")
+    print("Step 1/5: Fetching Go modules (this might take a few minutes)...")
     code = Popen(["go", "mod", "download", "all"], cwd=PROJECT_DIRECTORY).wait()
     if code != 0:
         print("Error: Failed to fetch Go modules.")
