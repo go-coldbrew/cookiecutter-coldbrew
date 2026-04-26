@@ -12,6 +12,7 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 	"github.com/go-coldbrew/core"
+	"github.com/go-coldbrew/workers"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/swaggest/swgui"
 	"github.com/swaggest/swgui/v5emb"
@@ -23,14 +24,25 @@ import (
 
 // Compile-time interface assertions.
 var (
-	_ core.CBService          = (*cbSvc)(nil)
-	_ core.CBStopper          = (*cbSvc)(nil)
-	_ core.CBGracefulStopper  = (*cbSvc)(nil)
+	_ core.CBService         = (*cbSvc)(nil)
+	_ core.CBStopper         = (*cbSvc)(nil)
+	_ core.CBGracefulStopper = (*cbSvc)(nil)
+	_ core.CBPreStarter      = (*cbSvc)(nil)
+	_ core.CBWorkerProvider  = (*cbSvc)(nil)
 )
 
-// cbSvc is the service implementation of ColdBrew service
+// serviceImpl is the interface that the service implementation must satisfy.
+// It combines cleanup (Stop) with background worker management (Workers).
+type serviceImpl interface {
+	Stop()
+	Workers() []*workers.Worker
+}
+
+// cbSvc is the ColdBrew service adapter. It delegates to the service
+// implementation in service/service.go. Optional interfaces (CBPreStarter,
+// CBWorkerProvider, etc.) are discovered automatically by ColdBrew's Run().
 type cbSvc struct {
-	stopper core.CBStopper
+	impl serviceImpl
 }
 
 // FailCheck allows graceful termination of the service
@@ -46,9 +58,20 @@ func (s *cbSvc) FailCheck(fail bool) {
 // Stop is called when the service is being stopped by the ColdBrew framework
 // This is a good place to clean up resources and gracefully shutdown the service if needed before the process exits completely
 func (s *cbSvc) Stop() {
-	s.stopper.Stop()
+	s.impl.Stop()
+}
 
-	// Add your additional cleanup code here if needed
+// PreStart is called before gRPC/HTTP servers start. Use this for setup that
+// must complete before accepting traffic: auth interceptors, database
+// connections, interceptor configuration, etc. Returning an error aborts startup.
+func (s *cbSvc) PreStart(ctx context.Context) error {
+	auth.Setup(ctx, config.Get().AuthConfig)
+	return nil
+}
+
+// Workers delegates to the service implementation which owns its background workers.
+func (s *cbSvc) Workers() []*workers.Worker {
+	return s.impl.Workers()
 }
 
 // InitHTTP is called by the ColdBrew framework to initialize the HTTP server and register the HTTP handlers
@@ -75,8 +98,7 @@ func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
 	// Register the health check service implementation with the gRPC server so that the gRPC health check endpoint is available
 	healthgrpc.RegisterHealthServer(server, impl)
 
-	// register stopper
-	s.stopper = impl
+	s.impl = impl
 	return nil
 }
 
@@ -123,10 +145,6 @@ func main() {
 	}
 	// Set the release name to the git commit hash from the version package
 	cfg.ReleaseName = version.GitCommit
-
-	// Register auth interceptors if JWT_SECRET or API_KEYS env vars are set.
-	// See service/auth/auth.go and https://docs.coldbrew.cloud/howto/auth/
-	auth.Setup(context.Background(), config.Get().AuthConfig)
 
 	// Initialize the ColdBrew framework with the given configuration
 	// This is a good place to customise the ColdBrew framework configuration if needed
