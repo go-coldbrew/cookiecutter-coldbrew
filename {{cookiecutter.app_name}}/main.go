@@ -61,10 +61,18 @@ func (s *cbSvc) Stop() {
 	s.impl.Stop()
 }
 
-// PreStart is called before gRPC/HTTP servers start. Use this for setup that
-// must complete before accepting traffic: auth interceptors, database
-// connections, interceptor configuration, etc. Returning an error aborts startup.
+// PreStart is called before gRPC/HTTP servers start. Use this for initialization
+// that must complete before accepting traffic: creating the service impl,
+// auth interceptors, database connections, etc. Returning an error aborts startup.
 func (s *cbSvc) PreStart(ctx context.Context) error {
+	impl, err := service.New(config.Get())
+	if err != nil {
+		return err
+	}
+	s.impl = impl
+
+	// Register auth interceptors (JWT_SECRET or API_KEYS env vars to enable).
+	// See service/auth/auth.go and https://docs.coldbrew.cloud/howto/auth/
 	auth.Setup(ctx, config.Get().AuthConfig)
 	return nil
 }
@@ -83,22 +91,11 @@ func (s *cbSvc) InitHTTP(ctx context.Context, mux *runtime.ServeMux, endpoint st
 	return {{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}HandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-// InitGRPC is called by the ColdBrew framework to initialize the gRPC server and register the gRPC handlers
-// This is a good place to register your gRPC handlers if you have any custom handlers that you want to register with the gRPC server
-// If you are using the grpc-gateway, you can use the RegisterMySvcHandlerFromEndpoint function to register the HTTP handlers
+// InitGRPC registers the service with the gRPC server.
+// The service impl is created in PreStart — InitGRPC just registers it.
 func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
-	// Create the service implementation
-	impl, err := service.New(config.Get())
-	if err != nil {
-		return err
-	}
-	// Register the service implementation with the gRPC server
-	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, impl)
-
-	// Register the health check service implementation with the gRPC server so that the gRPC health check endpoint is available
-	healthgrpc.RegisterHealthServer(server, impl)
-
-	s.impl = impl
+	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, s.impl)
+	healthgrpc.RegisterHealthServer(server, s.impl)
 	return nil
 }
 
