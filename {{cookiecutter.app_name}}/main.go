@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -13,6 +13,7 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 	"github.com/go-coldbrew/core"
+	"github.com/go-coldbrew/errors"
 	"github.com/go-coldbrew/workers"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/swaggest/swgui"
@@ -63,7 +64,9 @@ func (s *cbSvc) Stop() {
 // that must complete before accepting traffic: creating the service impl,
 // auth interceptors, database connections, etc. Returning an error aborts startup.
 func (s *cbSvc) PreStart(ctx context.Context) error {
-	impl, err := service.New(config.Get())
+	cfg := config.Get()
+
+	impl, err := service.New(cfg)
 	if err != nil {
 		return err
 	}
@@ -71,7 +74,7 @@ func (s *cbSvc) PreStart(ctx context.Context) error {
 
 	// Register auth interceptors (JWT_SECRET or API_KEYS env vars to enable).
 	// See service/auth/auth.go and https://docs.coldbrew.cloud/howto/auth/
-	auth.Setup(ctx, config.Get().AuthConfig)
+	auth.Setup(ctx, cfg.AuthConfig)
 	return nil
 }
 
@@ -95,15 +98,19 @@ func (s *cbSvc) InitHTTP(ctx context.Context, mux *runtime.ServeMux, endpoint st
 // InitGRPC registers the service with the gRPC server.
 // The service impl is created in PreStart — InitGRPC just registers it.
 func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
+	if s.impl == nil {
+		return errors.New("nil service implementation; PreStart not run")
+	}
+
 	svcServer, ok := s.impl.({{cookiecutter.app_name|lower}}.{{cookiecutter.service_name}}Server)
 	if !ok {
-		return errors.New("service impl does not implement {{cookiecutter.service_name}}Server")
+		return errors.Wrap(fmt.Errorf("expected {{cookiecutter.service_name}}Server, got %T", s.impl), "InitGRPC")
 	}
 	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, svcServer)
 
 	healthServer, ok := s.impl.(healthgrpc.HealthServer)
 	if !ok {
-		return errors.New("service impl does not implement HealthServer")
+		return errors.Wrap(fmt.Errorf("expected HealthServer, got %T", s.impl), "InitGRPC")
 	}
 	healthgrpc.RegisterHealthServer(server, healthServer)
 	return nil
