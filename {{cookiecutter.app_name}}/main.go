@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -12,6 +13,8 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 	"github.com/go-coldbrew/core"
+	"github.com/go-coldbrew/errors"
+	"github.com/go-coldbrew/workers"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/swaggest/swgui"
 	"github.com/swaggest/swgui/v5emb"
@@ -21,16 +24,23 @@ import (
 	openapi "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/third_party/OpenAPI"
 )
 
-// Compile-time interface assertions.
+// Compile-time interface assertions — remove or adjust as you customize your service.
 var (
-	_ core.CBService          = (*cbSvc)(nil)
-	_ core.CBStopper          = (*cbSvc)(nil)
-	_ core.CBGracefulStopper  = (*cbSvc)(nil)
+	_ core.CBService         = (*cbSvc)(nil)
+	_ core.CBStopper         = (*cbSvc)(nil)
+	_ core.CBGracefulStopper = (*cbSvc)(nil)
+	_ core.CBPreStarter      = (*cbSvc)(nil)
+	_ core.CBWorkerProvider  = (*cbSvc)(nil)
 )
 
-// cbSvc is the service implementation of ColdBrew service
+// cbSvc is the ColdBrew service adapter. It delegates to the service
+// implementation in service/service.go. Optional interfaces (CBPreStarter,
+// CBWorkerProvider, etc.) are discovered automatically by ColdBrew's Run().
+// impl stores the concrete *service.svc; typed as any so it can be passed
+// to Register*Server and health server registration without exporting the type.
+// Feel free to replace with a concrete or interface type if you prefer stronger typing.
 type cbSvc struct {
-	stopper core.CBStopper
+	impl any
 }
 
 // FailCheck allows graceful termination of the service
@@ -44,11 +54,36 @@ func (s *cbSvc) FailCheck(fail bool) {
 }
 
 // Stop is called when the service is being stopped by the ColdBrew framework
-// This is a good place to clean up resources and gracefully shutdown the service if needed before the process exits completely
 func (s *cbSvc) Stop() {
-	s.stopper.Stop()
+	if impl, ok := s.impl.(interface{ Stop() }); ok {
+		impl.Stop()
+	}
+}
 
-	// Add your additional cleanup code here if needed
+// PreStart is called before gRPC/HTTP servers start. Use this for initialization
+// that must complete before accepting traffic: creating the service impl,
+// auth interceptors, database connections, etc. Returning an error aborts startup.
+func (s *cbSvc) PreStart(ctx context.Context) error {
+	cfg := config.Get()
+
+	impl, err := service.New(cfg)
+	if err != nil {
+		return err
+	}
+	s.impl = impl
+
+	// Register auth interceptors (JWT_SECRET or API_KEYS env vars to enable).
+	// See service/auth/auth.go and https://docs.coldbrew.cloud/howto/auth/
+	auth.Setup(ctx, cfg.AuthConfig)
+	return nil
+}
+
+// Workers delegates to the service implementation which owns its background workers.
+func (s *cbSvc) Workers() []*workers.Worker {
+	if impl, ok := s.impl.(interface{ Workers() []*workers.Worker }); ok {
+		return impl.Workers()
+	}
+	return nil
 }
 
 // InitHTTP is called by the ColdBrew framework to initialize the HTTP server and register the HTTP handlers
@@ -60,23 +95,24 @@ func (s *cbSvc) InitHTTP(ctx context.Context, mux *runtime.ServeMux, endpoint st
 	return {{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}HandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-// InitGRPC is called by the ColdBrew framework to initialize the gRPC server and register the gRPC handlers
-// This is a good place to register your gRPC handlers if you have any custom handlers that you want to register with the gRPC server
-// If you are using the grpc-gateway, you can use the RegisterMySvcHandlerFromEndpoint function to register the HTTP handlers
+// InitGRPC registers the service with the gRPC server.
+// The service impl is created in PreStart — InitGRPC just registers it.
 func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
-	// Create the service implementation
-	impl, err := service.New(config.Get())
-	if err != nil {
-		return err
+	if s.impl == nil {
+		return errors.New("nil service implementation; PreStart not run")
 	}
-	// Register the service implementation with the gRPC server
-	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, impl)
 
-	// Register the health check service implementation with the gRPC server so that the gRPC health check endpoint is available
-	healthgrpc.RegisterHealthServer(server, impl)
+	svcServer, ok := s.impl.({{cookiecutter.app_name|lower}}.{{cookiecutter.service_name}}Server)
+	if !ok {
+		return errors.Wrap(fmt.Errorf("expected {{cookiecutter.service_name}}Server, got %T", s.impl), "InitGRPC")
+	}
+	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, svcServer)
 
-	// register stopper
-	s.stopper = impl
+	healthServer, ok := s.impl.(healthgrpc.HealthServer)
+	if !ok {
+		return errors.Wrap(fmt.Errorf("expected HealthServer, got %T", s.impl), "InitGRPC")
+	}
+	healthgrpc.RegisterHealthServer(server, healthServer)
 	return nil
 }
 
@@ -123,10 +159,6 @@ func main() {
 	}
 	// Set the release name to the git commit hash from the version package
 	cfg.ReleaseName = version.GitCommit
-
-	// Register auth interceptors if JWT_SECRET or API_KEYS env vars are set.
-	// See service/auth/auth.go and https://docs.coldbrew.cloud/howto/auth/
-	auth.Setup(context.Background(), config.Get().AuthConfig)
 
 	// Initialize the ColdBrew framework with the given configuration
 	// This is a good place to customise the ColdBrew framework configuration if needed

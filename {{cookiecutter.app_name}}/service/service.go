@@ -9,15 +9,20 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
 	proto "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/metrics"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/genproto/googleapis/api/httpbody"
 	"github.com/go-coldbrew/errors"
 	cblog "github.com/go-coldbrew/log"
+	"github.com/go-coldbrew/workers"
+	"google.golang.org/genproto/googleapis/api/httpbody"
 	"google.golang.org/grpc/health"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// svc should implement the service interface defined in the proto file
-var _ proto.{{cookiecutter.service_name}}Server = (*svc)(nil)
+// Compile-time interface checks — remove or adjust as you customize your service.
+var (
+	_ proto.{{cookiecutter.service_name}}Server         = (*svc)(nil)
+	_ interface{ Stop() }                      = (*svc)(nil)
+	_ interface{ Workers() []*workers.Worker } = (*svc)(nil)
+)
 
 // Service interface for the service
 type svc struct {
@@ -78,7 +83,27 @@ func (s *svc) Stop() {
 	// Close database connections, flush buffers, etc.
 }
 
-// Creates a new Service instance and returns it
+// Workers returns background workers managed by ColdBrew via CBWorkerProvider.
+// Workers are started alongside gRPC/HTTP servers with automatic panic recovery
+// and configurable restart. Add your periodic tasks and long-running consumers here.
+func (s *svc) Workers() []*workers.Worker {
+	return []*workers.Worker{
+		workers.NewWorker("cleanup").
+			HandlerFunc(s.cleanup).
+			Every(5 * time.Minute).
+			WithJitter(10),
+		// Uncomment to add a queue consumer:
+		// workers.NewWorker("queue-consumer").HandlerFunc(s.consumeMessages),
+	}
+}
+
+func (s *svc) cleanup(ctx context.Context, info *workers.WorkerInfo) error {
+	slog.LogAttrs(ctx, slog.LevelInfo, "running periodic cleanup")
+	// TODO: Add your cleanup logic here (e.g., purge expired sessions, compact data)
+	return nil
+}
+
+// New creates a new Service instance and returns it
 func New(cfg config.Config) (*svc, error) {
 	// TODO: Application should validate the config here and return an error if it is invalid or missing
 	s := &svc{

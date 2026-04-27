@@ -76,6 +76,23 @@ func TestError(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
+func TestWorkers(t *testing.T) {
+	s, err := New(config.Get())
+	assert.NoError(t, err)
+
+	w := s.Workers()
+	assert.NotEmpty(t, w, "Workers() should return at least one worker")
+
+	var found bool
+	for _, worker := range w {
+		if worker.GetName() == "cleanup" {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "Workers() should include a worker named 'cleanup'")
+}
+
 func BenchmarkEcho(b *testing.B) {
 	const prefix = "testPrefix"
 	const msg = "hello"
