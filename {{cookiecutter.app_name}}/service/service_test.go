@@ -82,7 +82,15 @@ func TestWorkers(t *testing.T) {
 
 	w := s.Workers()
 	assert.NotEmpty(t, w, "Workers() should return at least one worker")
-	assert.Equal(t, "cleanup", w[0].GetName(), "first worker should be named 'cleanup'")
+
+	var found bool
+	for _, worker := range w {
+		if worker.GetName() == "cleanup" {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "Workers() should include a worker named 'cleanup'")
 }
 
 func BenchmarkEcho(b *testing.B) {

@@ -12,7 +12,6 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/auth"
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/version"
 	"github.com/go-coldbrew/core"
-	"github.com/go-coldbrew/workers"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/swaggest/swgui"
 	"github.com/swaggest/swgui/v5emb"
@@ -22,7 +21,7 @@ import (
 	openapi "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/third_party/OpenAPI"
 )
 
-// Compile-time interface assertions.
+// Compile-time interface assertions — remove or adjust as you customize your service.
 var (
 	_ core.CBService         = (*cbSvc)(nil)
 	_ core.CBStopper         = (*cbSvc)(nil)
@@ -31,18 +30,14 @@ var (
 	_ core.CBWorkerProvider  = (*cbSvc)(nil)
 )
 
-// serviceImpl is the interface that the service implementation must satisfy.
-// It combines cleanup (Stop) with background worker management (Workers).
-type serviceImpl interface {
-	Stop()
-	Workers() []*workers.Worker
-}
-
 // cbSvc is the ColdBrew service adapter. It delegates to the service
 // implementation in service/service.go. Optional interfaces (CBPreStarter,
 // CBWorkerProvider, etc.) are discovered automatically by ColdBrew's Run().
+// impl stores the concrete *service.svc; typed as any so it can be passed
+// to Register*Server and health server registration without exporting the type.
+// Feel free to replace with a concrete or interface type if you prefer stronger typing.
 type cbSvc struct {
-	impl serviceImpl
+	impl any
 }
 
 // FailCheck allows graceful termination of the service
@@ -56,9 +51,10 @@ func (s *cbSvc) FailCheck(fail bool) {
 }
 
 // Stop is called when the service is being stopped by the ColdBrew framework
-// This is a good place to clean up resources and gracefully shutdown the service if needed before the process exits completely
 func (s *cbSvc) Stop() {
-	s.impl.Stop()
+	if impl, ok := s.impl.(interface{ Stop() }); ok {
+		impl.Stop()
+	}
 }
 
 // PreStart is called before gRPC/HTTP servers start. Use this for initialization
@@ -79,7 +75,10 @@ func (s *cbSvc) PreStart(ctx context.Context) error {
 
 // Workers delegates to the service implementation which owns its background workers.
 func (s *cbSvc) Workers() []*workers.Worker {
-	return s.impl.Workers()
+	if impl, ok := s.impl.(interface{ Workers() []*workers.Worker }); ok {
+		return impl.Workers()
+	}
+	return nil
 }
 
 // InitHTTP is called by the ColdBrew framework to initialize the HTTP server and register the HTTP handlers

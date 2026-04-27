@@ -17,8 +17,12 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// svc should implement the service interface defined in the proto file
-var _ proto.{{cookiecutter.service_name}}Server = (*svc)(nil)
+// Compile-time interface checks — remove or adjust as you customize your service.
+var (
+	_ proto.{{cookiecutter.service_name}}Server         = (*svc)(nil)
+	_ interface{ Stop() }                      = (*svc)(nil)
+	_ interface{ Workers() []*workers.Worker } = (*svc)(nil)
+)
 
 // Service interface for the service
 type svc struct {
