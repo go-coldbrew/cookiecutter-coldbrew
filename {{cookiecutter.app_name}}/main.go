@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -94,8 +95,17 @@ func (s *cbSvc) InitHTTP(ctx context.Context, mux *runtime.ServeMux, endpoint st
 // InitGRPC registers the service with the gRPC server.
 // The service impl is created in PreStart — InitGRPC just registers it.
 func (s *cbSvc) InitGRPC(ctx context.Context, server *grpc.Server) error {
-	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, s.impl)
-	healthgrpc.RegisterHealthServer(server, s.impl)
+	svcServer, ok := s.impl.({{cookiecutter.app_name|lower}}.{{cookiecutter.service_name}}Server)
+	if !ok {
+		return errors.New("service impl does not implement {{cookiecutter.service_name}}Server")
+	}
+	{{cookiecutter.app_name|lower}}.Register{{cookiecutter.service_name}}Server(server, svcServer)
+
+	healthServer, ok := s.impl.(healthgrpc.HealthServer)
+	if !ok {
+		return errors.New("service impl does not implement HealthServer")
+	}
+	healthgrpc.RegisterHealthServer(server, healthServer)
 	return nil
 }
 
