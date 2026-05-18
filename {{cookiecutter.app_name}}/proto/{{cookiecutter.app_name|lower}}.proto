@@ -64,6 +64,13 @@ message EchoResponse{
   string msg = 1;
 }
 
+// EchoToken is one frame of a StreamEcho response. Acts as a stand-in for an
+// LLM token, a progress event, or any other piece of a streaming response.
+message EchoToken{
+  string token = 1;
+  int32 index = 2;
+}
+
 service {{cookiecutter.service_name}} {
   //LivenessProbe for the service
   rpc HealthCheck(google.protobuf.Empty) returns (google.api.HttpBody) {
@@ -107,6 +114,23 @@ service {{cookiecutter.service_name}} {
       summary: "Error endpoint"
       description: "Request made to this endpoint result in errors."
       tags: "error"
+    };
+  }
+
+  // StreamEcho splits the input message into whitespace-separated tokens and
+  // emits one EchoToken per frame. Demonstrates server-streaming RPC over both
+  // native gRPC and the HTTP gateway (newline-delimited JSON by default, or
+  // text/event-stream when the client sends Accept: text/event-stream and the
+  // service registered core.SSEMarshaler — see main.go PreStart).
+  rpc StreamEcho(EchoRequest) returns (stream EchoToken) {
+    option (google.api.http) = {
+      post: "/api/v1/example/stream"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Streaming echo endpoint"
+      description: "Streams tokens of the input message, one frame at a time. Send Accept: text/event-stream for Server-Sent Events (browser EventSource), otherwise newline-delimited JSON."
+      tags: "echo"
     };
   }
 }

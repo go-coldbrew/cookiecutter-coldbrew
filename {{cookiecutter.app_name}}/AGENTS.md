@@ -83,6 +83,40 @@ make run-docker      # Run in Docker container
 4. Add tests in `service/service_test.go`
 5. Run `make test` and `make lint`
 
+### Adding a streaming endpoint (SSE / AI/LLM tokens)
+
+Server-streaming RPCs are exposed by the HTTP gateway as newline-delimited JSON by default, or Server-Sent Events when the client sends `Accept: text/event-stream`. SSE support is enabled by ColdBrew out of the box (set `DISABLE_SSE_MARSHALER=true` to opt out), and the compression wrapper auto-excludes `text/event-stream` so frames are not buffered by gzip.
+
+1. Define a server-streaming RPC:
+   ```protobuf
+   rpc MyStream(MyRequest) returns (stream MyEvent) {
+     option (google.api.http) = {
+       post: "/api/v1/my-stream"
+       body: "*"
+     };
+   }
+   ```
+2. Implement using `grpc.ServerStreamingServer[MyEvent]`:
+   ```go
+   func (s *svc) MyStream(req *proto.MyRequest, stream grpc.ServerStreamingServer[proto.MyEvent]) error {
+       ctx := stream.Context()
+       for event := range produce(ctx, req) {
+           if err := ctx.Err(); err != nil {
+               return errors.Wrap(err, "my_stream canceled")
+           }
+           if err := stream.Send(event); err != nil {
+               return errors.Wrap(err, "my_stream send")
+           }
+       }
+       return nil
+   }
+   ```
+3. **Always check `stream.Context().Err()` before each Send.** Client disconnect cancels the context — for AI/LLM workloads this is the signal to stop generating (and stop paying for) tokens. Pass the context into your LLM SDK call so cancellation propagates to the upstream provider.
+4. Track time-to-first-token (TTFT) as a separate metric from total stream duration — TTFT surfaces upstream latency independently of generation throughput. See `IncStreamEchoTotal` / `ObserveStreamEchoTTFT` in `service/metrics/` for the pattern.
+5. The `StreamEcho` RPC in the generated proto is a synthetic example — replace its body with your real streaming source (LLM SDK, change-data-capture feed, progress events, etc.) or delete it once you have your own streams.
+
+> **Gateway message wrapping.** grpc-gateway wraps each streamed message in `{"result": <message>}` over HTTP — this is the gateway's documented convention for server-streaming responses. Native gRPC clients see the unwrapped message. Use `google.api.HttpBody` as the stream response type if you need full control over the wire bytes for SSE consumers.
+
 ### Adding configuration
 
 1. Add a field to the `Config` struct in `config/config.go` with an `envconfig` tag:

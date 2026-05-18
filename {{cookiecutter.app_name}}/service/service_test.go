@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -10,6 +11,8 @@ import (
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/service/metrics"
 	mockmetrics "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/misc/mocks/metrics"
 	proto "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func TestNew(t *testing.T) {
@@ -91,6 +94,82 @@ func TestWorkers(t *testing.T) {
 		}
 	}
 	assert.True(t, found, "Workers() should include a worker named 'cleanup'")
+}
+
+// fakeStreamEchoServer is a minimal grpc.ServerStreamingServer[proto.EchoToken]
+// for unit-testing StreamEcho without a real gRPC connection. Tracks tokens
+// sent via Send so tests can assert ordering and payload, and exposes a
+// pluggable Context so tests can simulate client disconnect.
+type fakeStreamEchoServer struct {
+	grpc.ServerStream
+	ctx  context.Context
+	sent []*proto.EchoToken
+}
+
+func (f *fakeStreamEchoServer) Context() context.Context { return f.ctx }
+
+func (f *fakeStreamEchoServer) Send(t *proto.EchoToken) error {
+	f.sent = append(f.sent, t)
+	return nil
+}
+
+func (f *fakeStreamEchoServer) SetHeader(metadata.MD) error  { return nil }
+func (f *fakeStreamEchoServer) SendHeader(metadata.MD) error { return nil }
+func (f *fakeStreamEchoServer) SetTrailer(metadata.MD)       {}
+
+func TestStreamEcho(t *testing.T) {
+	const prefix = "testPrefix"
+	const msg = "hello world foo"
+
+	m := mockmetrics.NewMetrics(t)
+	m.EXPECT().IncStreamEchoTotal(metrics.OutcomeSuccess).Once()
+	m.EXPECT().ObserveStreamEchoDuration(metrics.OutcomeSuccess, mock.AnythingOfType("time.Duration")).Once()
+	m.EXPECT().ObserveStreamEchoTTFT(mock.AnythingOfType("time.Duration")).Once()
+
+	s := &svc{
+		Server:     GetHealthCheckServer(),
+		monitoring: m,
+		prefix:     prefix,
+	}
+
+	stream := &fakeStreamEchoServer{ctx: context.Background()}
+	err := s.StreamEcho(&proto.EchoRequest{Msg: msg}, stream)
+	assert.NoError(t, err)
+
+	assert.Len(t, stream.sent, 3, "one frame per whitespace-separated word")
+	for i, want := range []string{prefix + ": hello", prefix + ": world", prefix + ": foo"} {
+		assert.Equal(t, want, stream.sent[i].GetToken(), "frame %d token", i)
+		assert.Equal(t, int32(i), stream.sent[i].GetIndex(), "frame %d index", i)
+	}
+}
+
+func TestStreamEcho_ContextCanceledMidStream(t *testing.T) {
+	const prefix = "testPrefix"
+	const msg = "hello world foo bar"
+
+	m := mockmetrics.NewMetrics(t)
+	m.EXPECT().IncStreamEchoTotal(metrics.OutcomeCanceled).Once()
+	m.EXPECT().ObserveStreamEchoDuration(metrics.OutcomeCanceled, mock.AnythingOfType("time.Duration")).Once()
+	m.EXPECT().ObserveStreamEchoTTFT(mock.AnythingOfType("time.Duration")).Maybe()
+
+	s := &svc{
+		Server:     GetHealthCheckServer(),
+		monitoring: m,
+		prefix:     prefix,
+	}
+
+	// Cancel the context after a short delay — long enough to emit a frame or
+	// two but not enough to finish the four-token stream (each frame waits
+	// streamEchoFrameDelay before the next iteration). Asserting the handler
+	// stops generating mid-stream is the load-bearing safety property for
+	// AI/LLM workloads: client disconnect must halt token production.
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(streamEchoFrameDelay/2, cancel)
+
+	stream := &fakeStreamEchoServer{ctx: ctx}
+	err := s.StreamEcho(&proto.EchoRequest{Msg: msg}, stream)
+	assert.Error(t, err, "StreamEcho should return error when context is canceled")
+	assert.Less(t, len(stream.sent), 4, "handler should stop emitting after cancel")
 }
 
 func BenchmarkEcho(b *testing.B) {

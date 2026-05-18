@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/config"
@@ -13,6 +14,7 @@ import (
 	cblog "github.com/go-coldbrew/log"
 	"github.com/go-coldbrew/workers"
 	"google.golang.org/genproto/googleapis/api/httpbody"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -77,6 +79,60 @@ func (s *svc) Error(ctx context.Context, req *proto.EchoRequest) (*proto.EchoRes
 	err := errors.New("This is an Error")
 	slog.LogAttrs(ctx, slog.LevelInfo, "error requested")
 	return nil, errors.Wrap(err, "endpoint error")
+}
+
+// streamEchoFrameDelay paces frame emission so the streaming behavior is
+// visible end-to-end (browser EventSource, curl -N, grpcurl). For real
+// workloads — LLM tokens, progress events, etc. — remove the sleep and emit
+// frames as the upstream source produces them.
+const streamEchoFrameDelay = 50 * time.Millisecond
+
+// StreamEcho streams one EchoToken per whitespace-separated word in the
+// request message. Demonstrates server-streaming over both native gRPC and
+// the HTTP gateway (newline-delimited JSON by default, or Server-Sent Events
+// when core.SSEMarshaler is registered — see main.go PreStart).
+//
+// The Context check before each Send is the load-bearing piece for AI/LLM
+// workloads: client disconnect cancels stream.Context(), and the handler
+// must observe it to stop generating (and stop paying for) tokens.
+func (s *svc) StreamEcho(req *proto.EchoRequest, stream grpc.ServerStreamingServer[proto.EchoToken]) (err error) {
+	ctx := stream.Context()
+	start := time.Now()
+	outcome := metrics.OutcomeSuccess
+	defer func() {
+		if err != nil {
+			outcome = metrics.OutcomeError
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				outcome = metrics.OutcomeCanceled
+			}
+		}
+		s.monitoring.IncStreamEchoTotal(outcome)
+		s.monitoring.ObserveStreamEchoDuration(outcome, time.Since(start))
+	}()
+
+	tokens := strings.Fields(req.GetMsg())
+	ctx = cblog.AddAttrsToContext(ctx, slog.Int("stream_echo_tokens", len(tokens)))
+	slog.LogAttrs(ctx, slog.LevelInfo, "stream_echo requested")
+
+	for i, token := range tokens {
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return errors.Wrap(ctxErr, "stream_echo canceled")
+		}
+
+		if err := stream.Send(&proto.EchoToken{
+			Token: fmt.Sprintf("%s: %s", s.prefix, token),
+			Index: int32(i),
+		}); err != nil {
+			return errors.Wrap(err, "stream_echo send")
+		}
+
+		if i == 0 {
+			s.monitoring.ObserveStreamEchoTTFT(time.Since(start))
+		}
+
+		time.Sleep(streamEchoFrameDelay)
+	}
+	return nil
 }
 
 func (s *svc) Stop() {
