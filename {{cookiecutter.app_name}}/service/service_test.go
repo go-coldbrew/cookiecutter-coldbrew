@@ -12,7 +12,9 @@ import (
 	mockmetrics "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/misc/mocks/metrics"
 	proto "{{cookiecutter.source_path}}/{{cookiecutter.app_name}}/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 func TestNew(t *testing.T) {
@@ -169,6 +171,7 @@ func TestStreamEcho_ContextCanceledMidStream(t *testing.T) {
 	stream := &fakeStreamEchoServer{ctx: ctx}
 	err := s.StreamEcho(&proto.EchoRequest{Msg: msg}, stream)
 	assert.Error(t, err, "StreamEcho should return error when context is canceled")
+	assert.Equal(t, codes.Canceled, status.Code(err), "cancellation must surface as gRPC codes.Canceled")
 	assert.Less(t, len(stream.sent), 4, "handler should stop emitting after cancel")
 }
 

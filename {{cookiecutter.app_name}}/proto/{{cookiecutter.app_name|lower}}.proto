@@ -119,9 +119,10 @@ service {{cookiecutter.service_name}} {
 
   // StreamEcho splits the input message into whitespace-separated tokens and
   // emits one EchoToken per frame. Demonstrates server-streaming RPC over both
-  // native gRPC and the HTTP gateway (newline-delimited JSON by default, or
-  // text/event-stream when the client sends Accept: text/event-stream and the
-  // service registered core.SSEMarshaler — see main.go PreStart).
+  // native gRPC and the HTTP gateway. The gateway emits newline-delimited JSON
+  // by default, or Server-Sent Events when the client sends
+  // Accept: text/event-stream (ColdBrew registers the SSE marshaler by
+  // default; set DISABLE_SSE_MARSHALER=true on core to opt out).
   rpc StreamEcho(EchoRequest) returns (stream EchoToken) {
     option (google.api.http) = {
       post: "/api/v1/example/stream"
