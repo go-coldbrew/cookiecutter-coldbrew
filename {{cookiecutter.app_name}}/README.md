@@ -83,6 +83,29 @@ The file `service/service.go` contains the implementation of the API and serves 
 
 We use [grpc-gateway] to automatically map HTTP requests to gRPC requests. You can find the mapping in the `proto/{{cookiecutter.app_name|lower}}.proto` file. This server is generated according to [custom options](https://cloud.google.com/service-infrastructure/docs/service-management/reference/rpc/google.api#http) in your gRPC definition.  You can find more information about the mapping [here](https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/)
 
+### Streaming responses (Server-Sent Events)
+
+Server-streaming gRPC methods (e.g. `StreamEcho` in the generated proto) are exposed over the HTTP gateway in two formats based on the request's `Accept` header:
+
+- **Default — newline-delimited JSON.** One JSON object per line, suitable for `curl -N` or any HTTP client that reads line-by-line.
+- **`Accept: text/event-stream` — Server-Sent Events.** Standard SSE framing (`data: <json>\n\n`) consumable directly by a browser `EventSource(...)`. Enabled by ColdBrew out of the box (set `DISABLE_SSE_MARSHALER=true` to opt out). The HTTP compression wrapper automatically excludes `text/event-stream` so frames reach the client in real time.
+
+Try it against the generated `StreamEcho` example:
+
+```console
+$ # Newline-delimited JSON (one frame per line):
+$ curl -N -X POST -H 'Content-Type: application/json' \
+    -d '{"msg":"hello world foo"}' \
+    http://localhost:9091/api/v1/example/stream
+
+$ # Server-Sent Events (browser EventSource format):
+$ curl -N -X POST -H 'Content-Type: application/json' -H 'Accept: text/event-stream' \
+    -d '{"msg":"hello world foo"}' \
+    http://localhost:9091/api/v1/example/stream
+```
+
+This is the right transport for AI/LLM token streaming and other long-running progressive responses. Stream handlers must observe `stream.Context()` cancellation — client disconnect cancels the context, and your handler should stop producing (and stop paying for) further tokens. See `StreamEcho` in `service/service.go` for the pattern.
+
 ## Application configuration
 
 This project uses [envconfig] to manage configuration as environment variables. You can find the configuration struct in `config/config.go`. You can also find the default values in the `config/config.go` file.

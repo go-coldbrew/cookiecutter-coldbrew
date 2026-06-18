@@ -49,3 +49,45 @@ func TestObserveEchoDuration(t *testing.T) {
 		t.Fatal("expected at least one observation")
 	}
 }
+
+func TestIncStreamEchoTotal(t *testing.T) {
+	m := New()
+	m.IncStreamEchoTotal(OutcomeSuccess)
+	m.IncStreamEchoTotal(OutcomeCanceled)
+
+	mf := gatherMetric(t, namespace+"_stream_echo_total")
+	if mf == nil {
+		t.Fatal("metric not found")
+	}
+	if len(mf.GetMetric()) < 2 {
+		t.Fatalf("expected at least 2 label pairs (success + canceled), got %d", len(mf.GetMetric()))
+	}
+}
+
+func TestObserveStreamEchoDuration(t *testing.T) {
+	m := New()
+	m.ObserveStreamEchoDuration(OutcomeSuccess, 200*time.Millisecond)
+
+	mf := gatherMetric(t, namespace+"_stream_echo_duration_seconds")
+	if mf == nil {
+		t.Fatal("metric not found")
+	}
+	h := mf.GetMetric()[0].GetHistogram()
+	if h.GetSampleCount() == 0 {
+		t.Fatal("expected at least one observation")
+	}
+}
+
+func TestObserveStreamEchoTTFT(t *testing.T) {
+	m := New()
+	m.ObserveStreamEchoTTFT(10 * time.Millisecond)
+
+	mf := gatherMetric(t, namespace+"_stream_echo_ttft_seconds")
+	if mf == nil {
+		t.Fatal("metric not found")
+	}
+	h := mf.GetMetric()[0].GetHistogram()
+	if h.GetSampleCount() == 0 {
+		t.Fatal("expected at least one observation")
+	}
+}
